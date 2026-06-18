@@ -40,7 +40,8 @@ export async function getSuggestions(text, mode) {
     : `You are a friendly English learning assistant. The user wrote an English sentence. Suggest 3 more natural versions. Return JSON only: {"suggestions": ["...", "...", "..."]}. Be encouraging, not corrective in tone.\n\nEnglish text: ${text}`;
 
   const raw = await callGemini([{ parts: [{ text: prompt }] }]);
-  const match = raw.match(/\{[\s\S]*\}/);
+  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
   if (!match) throw new Error('Invalid response format');
   return JSON.parse(match[0]).suggestions;
 }
@@ -73,7 +74,8 @@ Keep words simple and useful for daily journaling. Max 4 words.`;
     ],
   }]);
 
-  const match = raw.match(/\{[\s\S]*\}/);
+  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
   if (!match) throw new Error('Invalid response format');
   return JSON.parse(match[0]);
 }
@@ -94,7 +96,8 @@ Return JSON only:
 }`;
 
   const raw = await callGemini([{ parts: [{ text: prompt }] }]);
-  const match = raw.match(/\{[\s\S]*\}/);
+  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
   if (!match) throw new Error('Invalid response format');
   return JSON.parse(match[0]);
 }
