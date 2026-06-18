@@ -106,7 +106,8 @@ Description: ${description || ''}
 Return JSON only:
 {
   "koTitle": "한국어 제목 (20자 이내)",
-  "summary": ["첫 번째 요약 문장", "두 번째 요약 문장", "세 번째 요약 문장"],
+  "summary": ["첫 번째 한국어 요약", "두 번째 한국어 요약", "세 번째 한국어 요약"],
+  "enSummary": ["First English summary sentence", "Second English summary sentence", "Third English summary sentence"],
   "words": ["key word 1", "key word 2", "key word 3", "key word 4"],
   "category": "세계|기술|환경|경제|문화 중 하나"
 }`;
