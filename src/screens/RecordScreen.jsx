@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { getSuggestions, getStoredKey } from '../utils/gemini';
+import { getSuggestions, analyzePhoto, getStoredKey } from '../utils/gemini';
 import { saveRecord, loadRecords } from '../utils/storage';
 
 const DRAFT_KEY = 'slowrunner_draft';
@@ -151,6 +151,8 @@ export default function RecordScreen() {
   const [draftSaved, setDraftSaved] = useState(!!draft?.text);
   const [isFirstRecord, setIsFirstRecord] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [photoAnalysis, setPhotoAnalysis] = useState(null);
+  const [photoAnalyzing, setPhotoAnalyzing] = useState(false);
   const fileRef = useRef();
 
   useEffect(() => {
@@ -165,7 +167,23 @@ export default function RecordScreen() {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => setPhotoUrl(ev.target.result);
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target.result;
+      setPhotoUrl(dataUrl);
+      setPhotoAnalysis(null);
+      const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY;
+      if (!hasKey) return;
+      setPhotoAnalyzing(true);
+      try {
+        const result = await analyzePhoto(dataUrl);
+        setPhotoAnalysis(result);
+        if (result.sentence && !text) setText(result.sentence);
+      } catch {
+        // silent fail
+      } finally {
+        setPhotoAnalyzing(false);
+      }
+    };
     reader.readAsDataURL(file);
   };
 
@@ -344,6 +362,35 @@ export default function RecordScreen() {
         )}
       </button>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+
+      {/* Photo Analysis Result */}
+      {photoAnalyzing && (
+        <div className="p-3 rounded-2xl flex items-center gap-2 fade-in"
+          style={{ background: 'rgba(10,24,4,0.8)', border: '1px solid #2a5010' }}>
+          <span className="text-lg animate-spin">✨</span>
+          <p className="text-[#6aaa30] text-sm">AI가 사진을 읽고 있어요...</p>
+        </div>
+      )}
+      {photoAnalysis && !photoAnalyzing && (
+        <div className="p-3 rounded-2xl space-y-2 slide-up"
+          style={{ background: 'rgba(10,24,4,0.8)', border: '1px solid #3a7a18' }}>
+          <p className="text-[#8ab84a] text-xs font-semibold">📷 사진 속 단어들</p>
+          {photoAnalysis.scene && (
+            <p className="text-[#6aaa30] text-xs">{photoAnalysis.scene}</p>
+          )}
+          <div className="flex flex-wrap gap-1.5">
+            {photoAnalysis.words?.map((w, i) => (
+              <button key={i}
+                onClick={() => setText(prev => prev ? prev + ' ' + w.english : w.english)}
+                className="px-2.5 py-1 rounded-full text-xs transition-all active:scale-95"
+                style={{ background: 'rgba(42,90,16,0.7)', border: '1px solid #3a7a18', color: '#c5f07a' }}>
+                {w.english} <span className="text-[#4a8a20]">· {w.korean}</span>
+              </button>
+            ))}
+          </div>
+          <p className="text-[#3a6a14] text-xs">단어 탭하면 입력창에 추가돼요</p>
+        </div>
+      )}
 
       {/* Text Input */}
       <textarea
