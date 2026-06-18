@@ -77,7 +77,7 @@ async function generateShareImage(englishText, words) {
   ctx.fillStyle = '#7dc84a';
   ctx.font = 'bold 22px system-ui, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('🌿 Slow Runner', 360, 230);
+  ctx.fillText('🌿 산들로그', 360, 230);
 
   // English text
   ctx.fillStyle = '#c5f07a';
@@ -261,13 +261,13 @@ export default function RecordScreen() {
     try {
       const dataUrl = await generateShareImage(savedText, savedWords);
       const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], 'slowrunner.png', { type: 'image/png' });
+      const file = new File([blob], 'sandeullog.png', { type: 'image/png' });
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Slow Runner 🌿', text: savedText });
+        await navigator.share({ files: [file], title: '산들로그 🌿', text: savedText });
       } else {
         const a = document.createElement('a');
         a.href = dataUrl;
-        a.download = 'slowrunner.png';
+        a.download = 'sandeullog.png';
         a.click();
       }
     } catch (e) {

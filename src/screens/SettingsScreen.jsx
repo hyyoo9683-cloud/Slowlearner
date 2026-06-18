@@ -161,7 +161,7 @@ export default function SettingsScreen() {
       {/* App info */}
       <div className="p-4 rounded-2xl space-y-1"
         style={{ background: 'rgba(10,24,4,0.4)', border: '1px solid #1a4008' }}>
-        <p className="text-[#4a7a20] text-xs font-semibold">Slow Runner 🌿</p>
+        <p className="text-[#4a7a20] text-xs font-semibold">산들로그 🌿</p>
         <p className="text-[#3a5a18] text-xs">일상에서 배우는 언어 · v1.1.0</p>
       </div>
     </div>

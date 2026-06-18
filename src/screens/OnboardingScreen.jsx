@@ -65,7 +65,7 @@ export default function OnboardingScreen({ onDone }) {
             <RedHoodCharacter size={120} />
           </div>
           <h1 className="text-[#c5f07a] text-2xl font-bold text-center leading-tight mb-3">
-            안녕하세요! 👋<br />슬로우 러너예요
+            안녕하세요! 👋<br />산들로그예요
           </h1>
           <p className="text-[#6aaa30] text-sm text-center leading-relaxed mb-2">
             오늘 찍은 사진 한 장,<br />
@@ -172,7 +172,7 @@ export default function OnboardingScreen({ onDone }) {
               background: level ? '#c84040' : 'rgba(20,50,8,0.5)',
               color: level ? 'white' : '#3a5a18',
             }}>
-            슬로우 러너 시작! 🌿
+            산들로그 시작! 🌿
           </button>
         </div>
       )}

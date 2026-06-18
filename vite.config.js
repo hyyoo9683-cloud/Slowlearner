@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'Slow Runner',
-        short_name: 'SlowRunner',
+        name: '산들로그',
+        short_name: '산들로그',
         description: '일상에서 배우는 언어',
         theme_color: '#1a3d0a',
         background_color: '#1a3d0a',
