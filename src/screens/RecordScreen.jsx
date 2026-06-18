@@ -167,7 +167,7 @@ export default function RecordScreen() {
     const reader = new FileReader();
     reader.onload = async (ev) => {
       try {
-        const resized = await resizeImage(ev.target.result, 800);
+        const resized = await resizeImage(ev.target.result, 400, 0.6);
         setPhotoUrl(resized);
         setPhotoAnalysis(null);
         const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY;
@@ -190,7 +190,7 @@ export default function RecordScreen() {
     reader.readAsDataURL(file);
   };
 
-  const resizeImage = (dataUrl, maxSize) => new Promise((resolve) => {
+  const resizeImage = (dataUrl, maxSize, quality = 0.8) => new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
@@ -198,7 +198,7 @@ export default function RecordScreen() {
       canvas.width = img.width * ratio;
       canvas.height = img.height * ratio;
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', 0.8));
+      resolve(canvas.toDataURL('image/jpeg', quality));
     };
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;

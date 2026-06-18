@@ -9,8 +9,9 @@ const FILTERS = [
 
 export default function GalleryScreen({ onNavigate }) {
   const records = loadRecords();
-  const [mode, setMode] = useState('gallery'); // 'gallery' | 'words'
+  const [mode, setMode] = useState('gallery');
   const [filter, setFilter] = useState('all');
+  const [detail, setDetail] = useState(null);
 
   const now = new Date();
   const filtered = records.filter(r => {
@@ -34,6 +35,39 @@ export default function GalleryScreen({ onNavigate }) {
   const totalWords = records.reduce((acc, r) => acc + (r.words?.length || 0), 0);
   const days = records.length;
   const hours = Math.floor(days * 3.5);
+
+  if (detail) {
+    return (
+      <div className="tab-content px-4 pt-4 pb-24 space-y-4">
+        <button onClick={() => setDetail(null)} className="text-[#6aaa3a] text-sm font-medium">← 돌아가기</button>
+        {detail.photoUrl && (
+          <img src={detail.photoUrl} alt="" className="w-full rounded-2xl object-cover max-h-64" />
+        )}
+        <div className="p-4 rounded-2xl space-y-2"
+          style={{ background: '#ffffff', border: '1px solid #ede9e2', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+          <p className="text-[#b0a898] text-xs">
+            {new Date(detail.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+          {detail.koreanText && (
+            <p className="text-[#7a7268] text-sm leading-relaxed">{detail.koreanText}</p>
+          )}
+          {detail.englishText && (
+            <p className="text-[#3a3530] text-base font-medium leading-relaxed">{detail.englishText}</p>
+          )}
+        </div>
+        {detail.words?.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {detail.words.map((w, i) => (
+              <span key={i} className="px-3 py-1 rounded-full text-xs font-medium"
+                style={{ background: '#edf5e4', color: '#4a8a20', border: '1px solid #c8e8a0' }}>
+                {w}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="tab-content px-4 pt-4 pb-24">
@@ -79,7 +113,8 @@ export default function GalleryScreen({ onNavigate }) {
         <>
           <div className="grid grid-cols-3 gap-2 mb-6">
             {filtered.map((r, i) => (
-              <div key={i} className="aspect-square rounded-2xl overflow-hidden relative"
+              <div key={i} onClick={() => setDetail(r)}
+                className="aspect-square rounded-2xl overflow-hidden relative cursor-pointer active:scale-95 transition-all"
                 style={{ background: '#edf5e4', border: '1px solid #d0e8b0' }}>
                 {r.photoUrl ? (
                   <img src={r.photoUrl} alt="" className="w-full h-full object-cover" />
