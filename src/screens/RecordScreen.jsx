@@ -3,7 +3,13 @@ import { getSuggestions, analyzePhoto, getStoredKey } from '../utils/gemini';
 import { saveRecord, loadRecords } from '../utils/storage';
 
 const DRAFT_KEY = 'slowrunner_draft';
-function saveDraft(data) { localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); }
+function saveDraft(data) {
+  try {
+    // 사진 base64는 용량이 너무 커서 저장 제외
+    const { photoUrl: _, ...rest } = data;
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(rest));
+  } catch { /* localStorage 용량 초과 시 무시 */ }
+}
 function loadDraft() { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch { return null; } }
 function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
 
@@ -168,24 +174,46 @@ export default function RecordScreen() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = async (ev) => {
-      const dataUrl = ev.target.result;
-      setPhotoUrl(dataUrl);
-      setPhotoAnalysis(null);
-      const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY;
-      if (!hasKey) return;
-      setPhotoAnalyzing(true);
       try {
-        const result = await analyzePhoto(dataUrl);
-        setPhotoAnalysis(result);
-        if (result.sentence && !text) setText(result.sentence);
+        // 미리보기용은 리사이즈해서 메모리 절약
+        const resized = await resizeImage(ev.target.result, 800);
+        setPhotoUrl(resized);
+        setPhotoAnalysis(null);
+        const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY;
+        if (!hasKey) return;
+        setPhotoAnalyzing(true);
+        try {
+          // AI 분석은 더 작은 사이즈로
+          const forAI = await resizeImage(ev.target.result, 512);
+          const result = await analyzePhoto(forAI);
+          setPhotoAnalysis(result);
+          if (result.sentence && !text) setText(result.sentence);
+        } catch {
+          // AI 분석 실패해도 사진은 유지
+        } finally {
+          setPhotoAnalyzing(false);
+        }
       } catch {
-        // silent fail
-      } finally {
         setPhotoAnalyzing(false);
       }
     };
     reader.readAsDataURL(file);
   };
+
+  // 이미지를 maxSize px로 리사이즈해서 base64 반환
+  const resizeImage = (dataUrl, maxSize) => new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
+      canvas.width = img.width * ratio;
+      canvas.height = img.height * ratio;
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
 
   const handleSuggest = async () => {
     setError('');
