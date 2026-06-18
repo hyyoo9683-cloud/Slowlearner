@@ -12,25 +12,32 @@ function getApiKey() {
   return import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('slowrunner_gemini_key');
 }
 
-async function callGemini(contents) {
+async function callGemini(contents, retries = 3) {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('NO_KEY');
 
-  const resp = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        contents,
-        generationConfig: { maxOutputTokens: 512, temperature: 0.7, responseMimeType: 'application/json' },
-      }),
-    }
-  );
+  for (let i = 0; i < retries; i++) {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          contents,
+          generationConfig: { maxOutputTokens: 512, temperature: 0.7, responseMimeType: 'application/json' },
+        }),
+      }
+    );
 
-  if (!resp.ok) throw new Error(`API error: ${await resp.text()}`);
-  const data = await resp.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (resp.status === 503 && i < retries - 1) {
+      await new Promise(r => setTimeout(r, (i + 1) * 1500));
+      continue;
+    }
+
+    if (!resp.ok) throw new Error(`API error: ${await resp.text()}`);
+    const data = await resp.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
 }
 
 // 텍스트 기반 영어 문장 제안
