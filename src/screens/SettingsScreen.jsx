@@ -1,23 +1,30 @@
 import { useState } from 'react';
 import { getStoredKey, setStoredKey } from '../utils/gemini';
 import { getFontSize, setFontSize, FONT_SIZES } from '../utils/fontSize';
-import { loadOnboarding, saveOnboarding } from './OnboardingScreen';
+import { loadOnboarding } from './OnboardingScreen';
 
 export default function SettingsScreen() {
   const [key, setKey] = useState(getStoredKey());
-  const [saved, setSaved] = useState(false);
+  const [savedMsg, setSavedMsg] = useState('');
   const [visible, setVisible] = useState(false);
   const [fontSize, setFontSizeState] = useState(getFontSize());
+  // hasKey를 state로 관리해야 저장 후 즉시 반영돼요
+  const [hasKey, setHasKey] = useState(getStoredKey().length > 0);
 
   const handleSave = () => {
-    setStoredKey(key.trim());
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    const trimmed = key.trim();
+    setStoredKey(trimmed);
+    setHasKey(trimmed.length > 0);
+    setSavedMsg(trimmed ? '✓ 저장됐어요!' : '키를 삭제했어요');
+    setTimeout(() => setSavedMsg(''), 2500);
   };
 
   const handleClear = () => {
     setKey('');
     setStoredKey('');
+    setHasKey(false);
+    setSavedMsg('키를 삭제했어요');
+    setTimeout(() => setSavedMsg(''), 2000);
   };
 
   const handleFontSize = (id) => {
@@ -30,7 +37,6 @@ export default function SettingsScreen() {
     window.location.reload();
   };
 
-  const hasKey = getStoredKey().length > 0;
   const profile = loadOnboarding();
 
   return (
@@ -44,12 +50,13 @@ export default function SettingsScreen() {
         <div className="flex gap-2">
           {FONT_SIZES.map(f => (
             <button key={f.id} onClick={() => handleFontSize(f.id)}
-              className="flex-1 py-2.5 rounded-2xl text-xs font-semibold transition-all active:scale-95"
+              className="flex-1 py-3 rounded-2xl font-bold transition-all active:scale-95"
               style={{
                 background: fontSize === f.id ? '#2a5a0a' : 'rgba(20,50,8,0.6)',
                 border: fontSize === f.id ? '2px solid #7dc84a' : '1px solid #2a5010',
                 color: fontSize === f.id ? '#c5f07a' : '#4a7a20',
                 fontSize: f.value,
+                lineHeight: 1,
               }}>
               가
             </button>
@@ -63,11 +70,15 @@ export default function SettingsScreen() {
             </span>
           ))}
         </div>
+        <p className="text-[#3a5a18] text-xs text-center">탭하면 앱 전체 글씨가 바뀌어요</p>
       </div>
 
       {/* AI Key Status */}
       <div className="p-4 rounded-2xl flex items-center gap-3"
-        style={{ background: hasKey ? 'rgba(20,60,10,0.8)' : 'rgba(60,20,10,0.5)', border: `1px solid ${hasKey ? '#3a7a18' : '#7a3018'}` }}>
+        style={{
+          background: hasKey ? 'rgba(20,60,10,0.8)' : 'rgba(60,20,10,0.5)',
+          border: `1px solid ${hasKey ? '#3a7a18' : '#7a3018'}`
+        }}>
         <span className="text-2xl">{hasKey ? '✅' : '⚠️'}</span>
         <div>
           <p className="text-[#c5f07a] text-sm font-semibold">
@@ -99,8 +110,8 @@ export default function SettingsScreen() {
         <div className="flex gap-2">
           <button onClick={handleSave}
             className="flex-1 py-3 rounded-2xl text-sm font-semibold transition-all active:scale-95"
-            style={{ background: saved ? '#1a6a0a' : '#2a5a0a', color: '#c5f07a', border: '1px solid #4a8a20' }}>
-            {saved ? '✓ 저장됨!' : '저장하기'}
+            style={{ background: savedMsg ? '#1a6a0a' : '#2a5a0a', color: '#c5f07a', border: '1px solid #4a8a20' }}>
+            {savedMsg || '저장하기'}
           </button>
           {hasKey && (
             <button onClick={handleClear}
