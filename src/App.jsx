@@ -6,11 +6,23 @@ import NewsScreen from './screens/NewsScreen';
 import GalleryScreen from './screens/GalleryScreen';
 import BooksScreen from './screens/BooksScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import OnboardingScreen, { loadOnboarding } from './screens/OnboardingScreen';
 
 export default function App() {
   const [tab, setTab] = useState('home');
+  const [onboardingDone, setOnboardingDone] = useState(() => !!loadOnboarding());
+  const [userProfile, setUserProfile] = useState(() => loadOnboarding());
 
   const navigate = (t) => setTab(t);
+
+  const handleOnboardingDone = (profile) => {
+    setUserProfile(profile);
+    setOnboardingDone(true);
+  };
+
+  if (!onboardingDone) {
+    return <OnboardingScreen onDone={handleOnboardingDone} />;
+  }
 
   const screen = () => {
     switch (tab) {

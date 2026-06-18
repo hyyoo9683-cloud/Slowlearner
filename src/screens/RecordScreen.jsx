@@ -1,6 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { getSuggestions, getStoredKey } from '../utils/gemini';
 import { saveRecord } from '../utils/storage';
+
+const DRAFT_KEY = 'slowrunner_draft';
+function saveDraft(data) { localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); }
+function loadDraft() { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch { return null; } }
+function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
 
 const DEMO_SUGGESTIONS = {
   korean: [
@@ -16,16 +21,26 @@ const DEMO_SUGGESTIONS = {
 };
 
 export default function RecordScreen() {
-  const [mode, setMode] = useState('korean');
-  const [text, setText] = useState('');
-  const [photoUrl, setPhotoUrl] = useState(null);
+  const draft = loadDraft();
+  const [mode, setMode] = useState(draft?.mode || 'korean');
+  const [text, setText] = useState(draft?.text || '');
+  const [photoUrl, setPhotoUrl] = useState(draft?.photoUrl || null);
   const [suggestions, setSuggestions] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
   const [savedWords, setSavedWords] = useState([]);
+  const [draftSaved, setDraftSaved] = useState(!!draft?.text);
   const fileRef = useRef();
+
+  useEffect(() => {
+    if (!text && !photoUrl) return;
+    saveDraft({ mode, text, photoUrl });
+    setDraftSaved(true);
+    const timer = setTimeout(() => setDraftSaved(false), 1500);
+    return () => clearTimeout(timer);
+  }, [text, mode, photoUrl]);
 
   const handlePhoto = (e) => {
     const file = e.target.files[0];
@@ -67,17 +82,20 @@ export default function RecordScreen() {
     const englishText = selected || suggestions[0] || text;
     const words = englishText.match(/\b[a-zA-Z]{4,}\b/g)?.slice(0, 5) || [];
     saveRecord({ mood: 'sunny', photoUrl, koreanText: mode === 'korean' ? text : '', englishText, words });
+    clearDraft();
     setSavedWords(words);
     setSaved(true);
   };
 
   const handleReset = () => {
+    clearDraft();
     setText('');
     setPhotoUrl(null);
     setSuggestions([]);
     setSelected(null);
     setSaved(false);
     setSavedWords([]);
+    setDraftSaved(false);
   };
 
   if (saved) {
@@ -117,7 +135,15 @@ export default function RecordScreen() {
 
   return (
     <div className="tab-content px-4 pt-4 pb-24 space-y-4">
-      <h2 className="text-[#c5f07a] font-bold text-lg">오늘의 기록</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-[#c5f07a] font-bold text-lg">오늘의 기록</h2>
+        {draftSaved && (
+          <span className="text-[#4a8a20] text-xs fade-in">✓ 임시저장됨</span>
+        )}
+        {!draftSaved && draft?.text && text && (
+          <span className="text-[#3a6a14] text-xs">임시저장 불러옴</span>
+        )}
+      </div>
 
       {/* Mode Toggle */}
       <div className="flex rounded-2xl overflow-hidden" style={{ background: 'rgba(10,24,4,0.8)', border: '1px solid #2a5010' }}>
