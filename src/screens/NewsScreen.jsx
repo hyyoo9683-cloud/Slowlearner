@@ -166,7 +166,8 @@ export default function NewsScreen({ onNavigate }) {
           style={{ background: '#f8f6f2', border: '1px solid #ede9e2' }}>
           <p className="text-[#9a9088] text-[11px] font-semibold">{n.category}</p>
           <p className="text-[#3a3530] text-sm font-bold leading-tight">{n.koTitle}</p>
-          <div className="space-y-0.5">
+          <p className="text-[#9a9088] text-xs leading-tight italic">{n.title}</p>
+          <div className="space-y-0.5 pt-1">
             {n.summary.map((s, j) => (
               <p key={j} className="text-[#7a7268] text-xs leading-relaxed">
                 <span className="text-[#6aaa3a] mr-1">·</span>{s}
