@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import BottomNav from './components/BottomNav';
+import { getFontSize, applyFontSize } from './utils/fontSize';
 import HomeScreen from './screens/HomeScreen';
 import RecordScreen from './screens/RecordScreen';
 import NewsScreen from './screens/NewsScreen';
@@ -10,6 +11,7 @@ import OnboardingScreen, { loadOnboarding } from './screens/OnboardingScreen';
 
 export default function App() {
   const [tab, setTab] = useState('home');
+  useEffect(() => { applyFontSize(getFontSize()); }, []);
   const [onboardingDone, setOnboardingDone] = useState(() => !!loadOnboarding());
   const [userProfile, setUserProfile] = useState(() => loadOnboarding());
 

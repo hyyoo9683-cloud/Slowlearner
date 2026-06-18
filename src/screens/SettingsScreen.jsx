@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { getStoredKey, setStoredKey } from '../utils/gemini';
+import { getFontSize, setFontSize, FONT_SIZES } from '../utils/fontSize';
+import { loadOnboarding, saveOnboarding } from './OnboardingScreen';
 
 export default function SettingsScreen() {
   const [key, setKey] = useState(getStoredKey());
   const [saved, setSaved] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [fontSize, setFontSizeState] = useState(getFontSize());
 
   const handleSave = () => {
     setStoredKey(key.trim());
@@ -17,13 +20,52 @@ export default function SettingsScreen() {
     setStoredKey('');
   };
 
+  const handleFontSize = (id) => {
+    setFontSizeState(id);
+    setFontSize(id);
+  };
+
+  const handleResetOnboarding = () => {
+    localStorage.removeItem('slowrunner_onboarding');
+    window.location.reload();
+  };
+
   const hasKey = getStoredKey().length > 0;
+  const profile = loadOnboarding();
 
   return (
     <div className="tab-content px-4 pt-4 pb-24 space-y-5">
       <h2 className="text-[#c5f07a] font-bold text-lg">설정</h2>
 
-      {/* Status */}
+      {/* Font Size */}
+      <div className="p-4 rounded-2xl space-y-3"
+        style={{ background: 'rgba(10,24,4,0.85)', border: '1px solid #2a5010' }}>
+        <p className="text-[#8ab84a] text-xs font-semibold">글씨 크기</p>
+        <div className="flex gap-2">
+          {FONT_SIZES.map(f => (
+            <button key={f.id} onClick={() => handleFontSize(f.id)}
+              className="flex-1 py-2.5 rounded-2xl text-xs font-semibold transition-all active:scale-95"
+              style={{
+                background: fontSize === f.id ? '#2a5a0a' : 'rgba(20,50,8,0.6)',
+                border: fontSize === f.id ? '2px solid #7dc84a' : '1px solid #2a5010',
+                color: fontSize === f.id ? '#c5f07a' : '#4a7a20',
+                fontSize: f.value,
+              }}>
+              가
+            </button>
+          ))}
+        </div>
+        <div className="flex justify-between px-1">
+          {FONT_SIZES.map(f => (
+            <span key={f.id} className="text-[10px] flex-1 text-center"
+              style={{ color: fontSize === f.id ? '#7dc84a' : '#3a5a18' }}>
+              {f.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* AI Key Status */}
       <div className="p-4 rounded-2xl flex items-center gap-3"
         style={{ background: hasKey ? 'rgba(20,60,10,0.8)' : 'rgba(60,20,10,0.5)', border: `1px solid ${hasKey ? '#3a7a18' : '#7a3018'}` }}>
         <span className="text-2xl">{hasKey ? '✅' : '⚠️'}</span>
@@ -87,17 +129,29 @@ export default function SettingsScreen() {
             </li>
           ))}
         </ol>
-        <p className="text-[#3a5a18] text-xs mt-2">
-          하루 1,500번 무료 · 개인 사용에 충분해요
-        </p>
+        <p className="text-[#3a5a18] text-xs mt-2">하루 1,500번 무료 · 개인 사용에 충분해요</p>
       </div>
+
+      {/* My Profile */}
+      {profile && (
+        <div className="p-4 rounded-2xl space-y-2"
+          style={{ background: 'rgba(10,24,4,0.4)', border: '1px solid #1a4008' }}>
+          <p className="text-[#8ab84a] text-xs font-semibold">내 프로필</p>
+          <p className="text-[#6aaa30] text-xs">
+            관심사: {profile.interests?.join(', ') || '-'} · 수준: {profile.level || '-'}
+          </p>
+          <button onClick={handleResetOnboarding}
+            className="text-[#3a5a18] text-xs underline">
+            온보딩 다시 하기
+          </button>
+        </div>
+      )}
 
       {/* App info */}
       <div className="p-4 rounded-2xl space-y-1"
         style={{ background: 'rgba(10,24,4,0.4)', border: '1px solid #1a4008' }}>
         <p className="text-[#4a7a20] text-xs font-semibold">Slow Runner 🌿</p>
-        <p className="text-[#3a5a18] text-xs">일상에서 배우는 언어</p>
-        <p className="text-[#2a4010] text-xs">v1.0.0</p>
+        <p className="text-[#3a5a18] text-xs">일상에서 배우는 언어 · v1.1.0</p>
       </div>
     </div>
   );

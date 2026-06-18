@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { getSuggestions, getStoredKey } from '../utils/gemini';
-import { saveRecord } from '../utils/storage';
+import { saveRecord, loadRecords } from '../utils/storage';
 
 const DRAFT_KEY = 'slowrunner_draft';
 function saveDraft(data) { localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); }
@@ -20,6 +20,122 @@ const DEMO_SUGGESTIONS = {
   ],
 };
 
+// 공유용 카드 캔버스 생성
+async function generateShareImage(englishText, words) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 720;
+  canvas.height = 720;
+  const ctx = canvas.getContext('2d');
+
+  // Forest background gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, 720);
+  grad.addColorStop(0, '#1a3d0a');
+  grad.addColorStop(1, '#0f2006');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 720, 720);
+
+  // Draw simple trees
+  const drawTree = (x, y, h) => {
+    ctx.fillStyle = '#5c3a1e';
+    ctx.fillRect(x - 6, y, 12, h * 0.4);
+    ctx.fillStyle = '#3d7a1a';
+    ctx.beginPath();
+    ctx.moveTo(x, y - h * 0.7);
+    ctx.lineTo(x - h * 0.3, y + h * 0.1);
+    ctx.lineTo(x + h * 0.3, y + h * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#4a8a20';
+    ctx.beginPath();
+    ctx.moveTo(x, y - h * 0.9);
+    ctx.lineTo(x - h * 0.22, y - h * 0.3);
+    ctx.lineTo(x + h * 0.22, y - h * 0.3);
+    ctx.closePath();
+    ctx.fill();
+  };
+  drawTree(80, 420, 200);
+  drawTree(640, 420, 180);
+  drawTree(180, 480, 140);
+  drawTree(540, 470, 150);
+
+  // Card background
+  ctx.fillStyle = 'rgba(10,24,4,0.85)';
+  roundRect(ctx, 60, 180, 600, 360, 28);
+  ctx.fill();
+  ctx.strokeStyle = '#3a7a18';
+  ctx.lineWidth = 2;
+  roundRect(ctx, 60, 180, 600, 360, 28);
+  ctx.stroke();
+
+  // Slow Runner label
+  ctx.fillStyle = '#7dc84a';
+  ctx.font = 'bold 22px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🌿 Slow Runner', 360, 230);
+
+  // English text
+  ctx.fillStyle = '#c5f07a';
+  ctx.font = 'bold 26px system-ui, sans-serif';
+  const lines = wrapText(ctx, englishText, 520, 26);
+  lines.forEach((line, i) => {
+    ctx.fillText(line, 360, 290 + i * 40);
+  });
+
+  // Word chips
+  if (words.length > 0) {
+    ctx.font = '18px system-ui, sans-serif';
+    let wx = 360 - (words.slice(0, 3).join('  ').length * 5);
+    words.slice(0, 3).forEach((w, i) => {
+      const tw = ctx.measureText(w).width + 24;
+      ctx.fillStyle = 'rgba(42,90,16,0.8)';
+      roundRect(ctx, wx, 460, tw, 32, 16);
+      ctx.fill();
+      ctx.fillStyle = '#c5f07a';
+      ctx.textAlign = 'left';
+      ctx.fillText(w, wx + 12, 481);
+      wx += tw + 10;
+    });
+  }
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#3a6a14';
+  ctx.font = '16px system-ui, sans-serif';
+  ctx.fillText('slowlearner-ashen.vercel.app', 360, 510);
+
+  return canvas.toDataURL('image/png');
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function wrapText(ctx, text, maxWidth, fontSize) {
+  const words = text.split(' ');
+  const lines = [];
+  let current = '';
+  words.forEach(w => {
+    const test = current ? current + ' ' + w : w;
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current);
+      current = w;
+    } else {
+      current = test;
+    }
+  });
+  if (current) lines.push(current);
+  return lines.slice(0, 3);
+}
+
 export default function RecordScreen() {
   const draft = loadDraft();
   const [mode, setMode] = useState(draft?.mode || 'korean');
@@ -31,7 +147,10 @@ export default function RecordScreen() {
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
   const [savedWords, setSavedWords] = useState([]);
+  const [savedText, setSavedText] = useState('');
   const [draftSaved, setDraftSaved] = useState(!!draft?.text);
+  const [isFirstRecord, setIsFirstRecord] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const fileRef = useRef();
 
   useEffect(() => {
@@ -79,12 +198,37 @@ export default function RecordScreen() {
   };
 
   const handleSave = () => {
+    const existingRecords = loadRecords();
+    const isFirst = existingRecords.length === 0;
     const englishText = selected || suggestions[0] || text;
     const words = englishText.match(/\b[a-zA-Z]{4,}\b/g)?.slice(0, 5) || [];
     saveRecord({ mood: 'sunny', photoUrl, koreanText: mode === 'korean' ? text : '', englishText, words });
     clearDraft();
     setSavedWords(words);
+    setSavedText(englishText);
+    setIsFirstRecord(isFirst);
     setSaved(true);
+  };
+
+  const handleShare = async () => {
+    setSharing(true);
+    try {
+      const dataUrl = await generateShareImage(savedText, savedWords);
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], 'slowrunner.png', { type: 'image/png' });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Slow Runner 🌿', text: savedText });
+      } else {
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = 'slowrunner.png';
+        a.click();
+      }
+    } catch (e) {
+      // user cancelled share
+    } finally {
+      setSharing(false);
+    }
   };
 
   const handleReset = () => {
@@ -95,22 +239,38 @@ export default function RecordScreen() {
     setSelected(null);
     setSaved(false);
     setSavedWords([]);
+    setSavedText('');
     setDraftSaved(false);
+    setIsFirstRecord(false);
   };
 
   if (saved) {
     return (
       <div className="tab-content px-4 pt-6 pb-24 space-y-4">
-        <div className="text-center py-6">
-          <div className="text-5xl mb-3">🌿</div>
-          <p className="text-[#c5f07a] text-xl font-bold">기록 완료!</p>
-          <p className="text-[#6aaa30] text-sm mt-1">오늘의 순간이 숲에 새겨졌어요</p>
-        </div>
-        {selected && (
-          <div className="p-4 rounded-2xl" style={{ background: 'rgba(42,90,16,0.5)', border: '1px solid #3a7a18' }}>
-            <p className="text-[#c5f07a] text-sm font-medium">{selected}</p>
+        {/* First record special */}
+        {isFirstRecord ? (
+          <div className="text-center py-6 slide-up">
+            <div className="text-6xl mb-3">🌱</div>
+            <p className="text-[#c5f07a] text-2xl font-bold">첫 번째 보물 발견!</p>
+            <p className="text-[#7dc84a] text-sm mt-2">숲에서 첫 발걸음을 내딛었어요</p>
+            <p className="text-[#4a7a20] text-xs mt-1">앞으로 매일 조금씩 채워가요 🌿</p>
+          </div>
+        ) : (
+          <div className="text-center py-4">
+            <div className="text-4xl mb-2">🌿</div>
+            <p className="text-[#c5f07a] text-xl font-bold">기록 완료!</p>
+            <p className="text-[#6aaa30] text-sm mt-1">오늘의 순간이 숲에 새겨졌어요</p>
           </div>
         )}
+
+        {/* Saved sentence */}
+        {savedText && (
+          <div className="p-4 rounded-2xl" style={{ background: 'rgba(42,90,16,0.5)', border: '1px solid #3a7a18' }}>
+            <p className="text-[#c5f07a] text-sm font-medium leading-relaxed">{savedText}</p>
+          </div>
+        )}
+
+        {/* Words */}
         {savedWords.length > 0 && (
           <div>
             <p className="text-[#8ab84a] text-xs font-semibold mb-2">오늘 사용한 단어</p>
@@ -124,6 +284,14 @@ export default function RecordScreen() {
             </div>
           </div>
         )}
+
+        {/* Share button */}
+        <button onClick={handleShare} disabled={sharing}
+          className="w-full py-4 rounded-2xl font-semibold text-sm active:scale-95 transition-all flex items-center justify-center gap-2"
+          style={{ background: 'rgba(42,90,16,0.6)', color: '#c5f07a', border: '1px solid #3a7a18' }}>
+          {sharing ? '⏳ 준비 중...' : '📤 카카오톡에 공유하기'}
+        </button>
+
         <button onClick={handleReset}
           className="w-full py-4 rounded-2xl font-semibold text-sm active:scale-95 transition-all"
           style={{ background: '#2a5a0a', color: '#c5f07a', border: '1px solid #4a8a20' }}>
@@ -201,7 +369,7 @@ export default function RecordScreen() {
         {loading ? '✨ AI가 생각하는 중...' : '✨ AI 제안 보기'}
       </button>
 
-      {error && <p className="text-red-400 text-xs text-center">{error}</p>}
+      {error && <p className="text-yellow-500 text-xs text-center">{error}</p>}
 
       {/* Suggestions */}
       {suggestions.length > 0 && (
