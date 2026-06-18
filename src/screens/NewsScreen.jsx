@@ -61,7 +61,6 @@ export default function NewsScreen({ onNavigate }) {
 
       if (data.articles && data.articles.length > 0) {
         setIsLive(true);
-        // Show raw articles first, then summarize with AI
         const rawNews = data.articles.map(a => ({
           category: '🌍 뉴스',
           title: a.title?.replace(/ - .*$/, '') || '',
@@ -72,7 +71,6 @@ export default function NewsScreen({ onNavigate }) {
           needsSummary: true,
         }));
         setNews(rawNews);
-        // Summarize with AI if key available
         const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY;
         if (hasKey) {
           summarizeAll(rawNews, data.articles);
@@ -113,15 +111,15 @@ export default function NewsScreen({ onNavigate }) {
   return (
     <div className="tab-content px-4 pt-4 pb-24 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-[#c5f07a] font-bold text-lg">오늘의 뉴스</h2>
+        <h2 className="text-[#3a3530] font-bold text-lg">오늘의 뉴스</h2>
         <div className="flex items-center gap-2">
           {isLive && (
             <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
-              style={{ background: 'rgba(42,90,16,0.6)', color: '#7dc84a', border: '1px solid #3a7a18' }}>
+              style={{ background: '#fff0f0', color: '#e05050', border: '1px solid #f8c0c0' }}>
               🔴 실시간
             </span>
           )}
-          <button onClick={fetchNews} className="text-[#4a7a20] text-xs">새로고침</button>
+          <button onClick={fetchNews} className="text-[#6aaa3a] text-xs font-medium">새로고침</button>
         </div>
       </div>
 
@@ -129,34 +127,34 @@ export default function NewsScreen({ onNavigate }) {
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
             <div key={i} className="h-20 rounded-2xl animate-pulse"
-              style={{ background: 'rgba(20,50,8,0.6)' }} />
+              style={{ background: '#f0ece4' }} />
           ))}
         </div>
       )}
 
       {!loading && news.map((n, i) => (
         <div key={i} className="rounded-2xl overflow-hidden"
-          style={{ background: 'rgba(10,24,4,0.85)', border: '1px solid #2a5010' }}>
+          style={{ background: '#ffffff', border: '1px solid #ede9e2', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
           <button className="w-full text-left p-4" onClick={() => setExpanded(expanded === i ? null : i)}>
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(42,80,16,0.6)', color: '#c5f07a' }}>
+                style={{ background: '#edf5e4', color: '#4a8a20' }}>
                 {n.category}
               </span>
               {n.needsSummary && (
-                <span className="text-[#4a7a20] text-xs">번역 중...</span>
+                <span className="text-[#b0a898] text-xs">번역 중...</span>
               )}
             </div>
-            <p className="text-[#c5f07a] font-bold text-sm mt-2 leading-tight line-clamp-2">{n.title}</p>
-            <p className="text-[#6aaa30] text-xs mt-1">{n.koTitle}</p>
+            <p className="text-[#3a3530] font-bold text-sm mt-2 leading-tight line-clamp-2">{n.title}</p>
+            <p className="text-[#9a9088] text-xs mt-1">{n.koTitle}</p>
           </button>
 
           {expanded === i && (
-            <div className="px-4 pb-4 space-y-3 slide-up">
-              <div className="space-y-1.5">
+            <div className="px-4 pb-4 space-y-3 slide-up" style={{ borderTop: '1px solid #f0ece4' }}>
+              <div className="space-y-1.5 pt-3">
                 {n.summary.map((s, j) => (
-                  <p key={j} className="text-[#a0c870] text-sm leading-relaxed">
-                    <span className="text-[#4a8a20] mr-1">·</span>{s}
+                  <p key={j} className="text-[#5a5550] text-sm leading-relaxed">
+                    <span className="text-[#6aaa3a] mr-1">·</span>{s}
                   </p>
                 ))}
               </div>
@@ -164,7 +162,7 @@ export default function NewsScreen({ onNavigate }) {
                 <div className="flex flex-wrap gap-1.5">
                   {n.words.map((w, j) => (
                     <span key={j} className="px-2.5 py-1 rounded-full text-xs font-medium"
-                      style={{ background: 'rgba(42,90,16,0.6)', color: '#c5f07a', border: '1px solid #3a7a18' }}>
+                      style={{ background: '#edf5e4', color: '#4a8a20', border: '1px solid #c8e8a0' }}>
                       {w}
                     </span>
                   ))}
@@ -172,7 +170,7 @@ export default function NewsScreen({ onNavigate }) {
               )}
               <button onClick={() => onNavigate('record')}
                 className="w-full py-3 rounded-xl text-xs font-semibold transition-all active:scale-95"
-                style={{ background: 'rgba(42,90,16,0.5)', border: '1px solid #3a7a18', color: '#c5f07a' }}>
+                style={{ background: '#edf5e4', border: '1px solid #c8e8a0', color: '#4a8a20' }}>
                 이 뉴스로 한 줄 써보기 ✏️
               </button>
             </div>
@@ -181,7 +179,7 @@ export default function NewsScreen({ onNavigate }) {
       ))}
 
       {!isLive && !loading && (
-        <p className="text-center text-[#3a5a18] text-xs pt-2">
+        <p className="text-center text-[#c0b8b0] text-xs pt-2">
           실시간 뉴스는 Vercel 환경변수에 NEWSAPI_KEY 설정 후 이용 가능해요
         </p>
       )}

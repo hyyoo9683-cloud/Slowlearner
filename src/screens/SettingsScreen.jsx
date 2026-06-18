@@ -8,7 +8,6 @@ export default function SettingsScreen() {
   const [savedMsg, setSavedMsg] = useState('');
   const [visible, setVisible] = useState(false);
   const [fontSize, setFontSizeState] = useState(getFontSize());
-  // hasKey를 state로 관리해야 저장 후 즉시 반영돼요
   const [hasKey, setHasKey] = useState(getStoredKey().length > 0);
 
   const handleSave = () => {
@@ -41,20 +40,20 @@ export default function SettingsScreen() {
 
   return (
     <div className="tab-content px-4 pt-4 pb-24 space-y-5">
-      <h2 className="text-[#c5f07a] font-bold text-lg">설정</h2>
+      <h2 className="text-[#3a3530] font-bold text-lg">설정</h2>
 
       {/* Font Size */}
       <div className="p-4 rounded-2xl space-y-3"
-        style={{ background: 'rgba(10,24,4,0.85)', border: '1px solid #2a5010' }}>
-        <p className="text-[#8ab84a] text-xs font-semibold">글씨 크기</p>
+        style={{ background: '#ffffff', border: '1px solid #ede9e2', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+        <p className="text-[#7a7268] text-xs font-semibold">글씨 크기</p>
         <div className="flex gap-2">
           {FONT_SIZES.map(f => (
             <button key={f.id} onClick={() => handleFontSize(f.id)}
               className="flex-1 py-3 rounded-2xl font-bold transition-all active:scale-95"
               style={{
-                background: fontSize === f.id ? '#2a5a0a' : 'rgba(20,50,8,0.6)',
-                border: fontSize === f.id ? '2px solid #7dc84a' : '1px solid #2a5010',
-                color: fontSize === f.id ? '#c5f07a' : '#4a7a20',
+                background: fontSize === f.id ? '#edf5e4' : '#f8f6f2',
+                border: fontSize === f.id ? '2px solid #6aaa3a' : '1px solid #e0dbd2',
+                color: fontSize === f.id ? '#4a8a20' : '#b0a898',
                 fontSize: f.value,
                 lineHeight: 1,
               }}>
@@ -65,26 +64,26 @@ export default function SettingsScreen() {
         <div className="flex justify-between px-1">
           {FONT_SIZES.map(f => (
             <span key={f.id} className="text-[10px] flex-1 text-center"
-              style={{ color: fontSize === f.id ? '#7dc84a' : '#3a5a18' }}>
+              style={{ color: fontSize === f.id ? '#6aaa3a' : '#c0b8b0' }}>
               {f.label}
             </span>
           ))}
         </div>
-        <p className="text-[#3a5a18] text-xs text-center">탭하면 앱 전체 글씨가 바뀌어요</p>
+        <p className="text-[#c0b8b0] text-xs text-center">탭하면 앱 전체 글씨가 바뀌어요</p>
       </div>
 
       {/* AI Key Status */}
       <div className="p-4 rounded-2xl flex items-center gap-3"
         style={{
-          background: hasKey ? 'rgba(20,60,10,0.8)' : 'rgba(60,20,10,0.5)',
-          border: `1px solid ${hasKey ? '#3a7a18' : '#7a3018'}`
+          background: hasKey ? '#edf5e4' : '#fff5f5',
+          border: `1px solid ${hasKey ? '#c8e8a0' : '#f8c0c0'}`
         }}>
         <span className="text-2xl">{hasKey ? '✅' : '⚠️'}</span>
         <div>
-          <p className="text-[#c5f07a] text-sm font-semibold">
+          <p className="text-[#3a3530] text-sm font-semibold">
             {hasKey ? 'AI 기능 활성화됨' : 'AI 키 미설정'}
           </p>
-          <p className="text-[#6aaa30] text-xs">
+          <p className="text-[#7a7268] text-xs">
             {hasKey ? 'Gemini API로 영어 제안이 작동해요' : '키 없이도 데모 문장으로 사용 가능해요'}
           </p>
         </div>
@@ -92,7 +91,7 @@ export default function SettingsScreen() {
 
       {/* API Key Input */}
       <div className="space-y-2">
-        <p className="text-[#8ab84a] text-xs font-semibold">GEMINI API 키</p>
+        <p className="text-[#7a7268] text-xs font-semibold">GEMINI API 키</p>
         <div className="relative">
           <input
             type={visible ? 'text' : 'password'}
@@ -100,23 +99,23 @@ export default function SettingsScreen() {
             onChange={e => setKey(e.target.value)}
             placeholder="AIza..."
             className="w-full py-3 px-4 pr-12 rounded-2xl text-sm outline-none"
-            style={{ background: 'rgba(10,24,4,0.8)', border: '1px solid #2a5010', color: '#c5f07a' }}
+            style={{ background: '#ffffff', border: '1px solid #e0dbd2', color: '#3a3530' }}
           />
           <button onClick={() => setVisible(!visible)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4a7a20] text-lg">
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#b0a898] text-lg">
             {visible ? '🙈' : '👁️'}
           </button>
         </div>
         <div className="flex gap-2">
           <button onClick={handleSave}
             className="flex-1 py-3 rounded-2xl text-sm font-semibold transition-all active:scale-95"
-            style={{ background: savedMsg ? '#1a6a0a' : '#2a5a0a', color: '#c5f07a', border: '1px solid #4a8a20' }}>
+            style={{ background: savedMsg ? '#edf5e4' : '#f0ece4', color: '#4a8a20', border: '1px solid #c8e8a0' }}>
             {savedMsg || '저장하기'}
           </button>
           {hasKey && (
             <button onClick={handleClear}
               className="px-4 py-3 rounded-2xl text-sm font-semibold transition-all active:scale-95"
-              style={{ background: 'rgba(60,20,10,0.5)', color: '#f07a7a', border: '1px solid #7a3018' }}>
+              style={{ background: '#fff5f5', color: '#e05050', border: '1px solid #f8c0c0' }}>
               삭제
             </button>
           )}
@@ -125,8 +124,8 @@ export default function SettingsScreen() {
 
       {/* How to get key */}
       <div className="p-4 rounded-2xl space-y-2"
-        style={{ background: 'rgba(10,24,4,0.6)', border: '1px solid #1a4008' }}>
-        <p className="text-[#c5f07a] text-sm font-semibold">🔑 무료 API 키 발급 방법</p>
+        style={{ background: '#f8f6f2', border: '1px solid #ede9e2' }}>
+        <p className="text-[#3a3530] text-sm font-semibold">🔑 무료 API 키 발급 방법</p>
         <ol className="space-y-1.5">
           {[
             'aistudio.google.com 접속',
@@ -134,25 +133,25 @@ export default function SettingsScreen() {
             '"Create API key" 버튼',
             '키 복사 후 위에 붙여넣기',
           ].map((s, i) => (
-            <li key={i} className="text-[#6aaa30] text-xs flex gap-2">
-              <span className="text-[#3a7a14] font-bold w-4 flex-shrink-0">{i + 1}.</span>
+            <li key={i} className="text-[#7a7268] text-xs flex gap-2">
+              <span className="text-[#6aaa3a] font-bold w-4 flex-shrink-0">{i + 1}.</span>
               {s}
             </li>
           ))}
         </ol>
-        <p className="text-[#3a5a18] text-xs mt-2">하루 1,500번 무료 · 개인 사용에 충분해요</p>
+        <p className="text-[#c0b8b0] text-xs mt-2">하루 1,500번 무료 · 개인 사용에 충분해요</p>
       </div>
 
       {/* My Profile */}
       {profile && (
         <div className="p-4 rounded-2xl space-y-2"
-          style={{ background: 'rgba(10,24,4,0.4)', border: '1px solid #1a4008' }}>
-          <p className="text-[#8ab84a] text-xs font-semibold">내 프로필</p>
-          <p className="text-[#6aaa30] text-xs">
+          style={{ background: '#ffffff', border: '1px solid #ede9e2' }}>
+          <p className="text-[#7a7268] text-xs font-semibold">내 프로필</p>
+          <p className="text-[#9a9088] text-xs">
             관심사: {profile.interests?.join(', ') || '-'} · 수준: {profile.level || '-'}
           </p>
           <button onClick={handleResetOnboarding}
-            className="text-[#3a5a18] text-xs underline">
+            className="text-[#6aaa3a] text-xs underline">
             온보딩 다시 하기
           </button>
         </div>
@@ -160,9 +159,9 @@ export default function SettingsScreen() {
 
       {/* App info */}
       <div className="p-4 rounded-2xl space-y-1"
-        style={{ background: 'rgba(10,24,4,0.4)', border: '1px solid #1a4008' }}>
-        <p className="text-[#4a7a20] text-xs font-semibold">산들로그 🌿</p>
-        <p className="text-[#3a5a18] text-xs">일상에서 배우는 언어 · v1.1.0</p>
+        style={{ background: '#f8f6f2', border: '1px solid #ede9e2' }}>
+        <p className="text-[#9a9088] text-xs font-semibold">산들로그 🌿</p>
+        <p className="text-[#c0b8b0] text-xs">일상에서 배우는 언어 · v1.2.0</p>
       </div>
     </div>
   );

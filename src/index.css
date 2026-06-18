@@ -7,7 +7,7 @@
 
 body {
   margin: 0;
-  background: #0f2006;
+  background: #e8e4dc;
   display: flex;
   justify-content: center;
   min-height: 100vh;
@@ -18,7 +18,7 @@ body {
   width: 100%;
   max-width: 390px;
   position: relative;
-  background: #1a3d0a;
+  background: #f5f3ee;
   min-height: 100vh;
 }
 

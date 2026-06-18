@@ -45,7 +45,7 @@ export default function OnboardingScreen({ onDone }) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#1a3d0a' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#f5f3ee' }}>
       {/* Progress dots */}
       <div className="flex justify-center gap-2 pt-10 pb-4">
         {[0, 1, 2].map(i => (
@@ -53,7 +53,7 @@ export default function OnboardingScreen({ onDone }) {
             style={{
               width: step === i ? 24 : 8,
               height: 8,
-              background: step >= i ? '#7dc84a' : 'rgba(125,200,74,0.3)',
+              background: step >= i ? '#6aaa3a' : '#e0dbd2',
             }} />
         ))}
       </div>
@@ -64,14 +64,14 @@ export default function OnboardingScreen({ onDone }) {
           <div className="float-anim mb-6">
             <RedHoodCharacter size={120} />
           </div>
-          <h1 className="text-[#c5f07a] text-2xl font-bold text-center leading-tight mb-3">
+          <h1 className="text-[#3a3530] text-2xl font-bold text-center leading-tight mb-3">
             안녕하세요! 👋<br />산들로그예요
           </h1>
-          <p className="text-[#6aaa30] text-sm text-center leading-relaxed mb-2">
+          <p className="text-[#7a7268] text-sm text-center leading-relaxed mb-2">
             오늘 찍은 사진 한 장,<br />
             오늘 본 풍경 한 줄.
           </p>
-          <p className="text-[#4a7a20] text-sm text-center leading-relaxed mb-8">
+          <p className="text-[#b0a898] text-sm text-center leading-relaxed mb-8">
             그게 영어 일기가 돼요.<br />
             공부 말고, 내 이야기로 시작해요.
           </p>
@@ -82,9 +82,9 @@ export default function OnboardingScreen({ onDone }) {
               { emoji: '📖', text: '나한테 맞는 책을 AI가 추천해줘요' },
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-3 p-3 rounded-2xl"
-                style={{ background: 'rgba(10,24,4,0.6)', border: '1px solid #2a5010' }}>
+                style={{ background: '#ffffff', border: '1px solid #ede9e2', boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
                 <span className="text-xl">{item.emoji}</span>
-                <p className="text-[#a0c870] text-sm">{item.text}</p>
+                <p className="text-[#5a5550] text-sm">{item.text}</p>
               </div>
             ))}
           </div>
@@ -100,24 +100,25 @@ export default function OnboardingScreen({ onDone }) {
       {step === 1 && (
         <div className="flex-1 flex flex-col px-6 pb-10 fade-in">
           <div className="flex-1 flex flex-col justify-center">
-            <p className="text-[#4a7a20] text-sm mb-1">2/3</p>
-            <h2 className="text-[#c5f07a] text-xl font-bold mb-2">어떤 걸 좋아하세요?</h2>
-            <p className="text-[#6aaa30] text-sm mb-6">
+            <p className="text-[#b0a898] text-sm mb-1">2/3</p>
+            <h2 className="text-[#3a3530] text-xl font-bold mb-2">어떤 걸 좋아하세요?</h2>
+            <p className="text-[#7a7268] text-sm mb-6">
               관심사에 맞는 뉴스와 책을 추천해드려요.<br />
-              <span className="text-[#4a7a20]">최대 2개 선택</span>
+              <span className="text-[#b0a898]">최대 2개 선택</span>
             </p>
             <div className="grid grid-cols-2 gap-3">
               {INTERESTS.map(item => (
                 <button key={item.id} onClick={() => toggleInterest(item.id)}
                   className="p-4 rounded-2xl text-left transition-all active:scale-95"
                   style={{
-                    background: interests.includes(item.id) ? 'rgba(42,120,16,0.6)' : 'rgba(10,24,4,0.6)',
-                    border: interests.includes(item.id) ? '2px solid #7dc84a' : '1px solid #2a5010',
+                    background: interests.includes(item.id) ? '#edf5e4' : '#ffffff',
+                    border: interests.includes(item.id) ? '2px solid #6aaa3a' : '1px solid #e0dbd2',
+                    boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
                   }}>
                   <span className="text-2xl block mb-1">{item.emoji}</span>
-                  <span className="text-[#c5f07a] text-sm font-medium">{item.label}</span>
+                  <span className="text-[#3a3530] text-sm font-medium">{item.label}</span>
                   {interests.includes(item.id) && (
-                    <span className="text-[#7dc84a] text-xs block">✓ 선택됨</span>
+                    <span className="text-[#6aaa3a] text-xs block">✓ 선택됨</span>
                   )}
                 </button>
               ))}
@@ -127,8 +128,9 @@ export default function OnboardingScreen({ onDone }) {
             disabled={interests.length === 0}
             className="w-full py-4 rounded-2xl font-bold text-base transition-all active:scale-95"
             style={{
-              background: interests.length > 0 ? '#2a7a0a' : 'rgba(20,50,8,0.5)',
-              color: interests.length > 0 ? '#c5f07a' : '#3a5a18',
+              background: interests.length > 0 ? '#edf5e4' : '#f0ece4',
+              color: interests.length > 0 ? '#4a8a20' : '#c0b8b0',
+              border: interests.length > 0 ? '1.5px solid #c8e8a0' : '1px solid #e0dbd2',
             }}>
             다음 →
           </button>
@@ -139,27 +141,28 @@ export default function OnboardingScreen({ onDone }) {
       {step === 2 && (
         <div className="flex-1 flex flex-col px-6 pb-10 fade-in">
           <div className="flex-1 flex flex-col justify-center">
-            <p className="text-[#4a7a20] text-sm mb-1">3/3</p>
-            <h2 className="text-[#c5f07a] text-xl font-bold mb-2">영어 실력이 어느 정도예요?</h2>
-            <p className="text-[#6aaa30] text-sm mb-6">
+            <p className="text-[#b0a898] text-sm mb-1">3/3</p>
+            <h2 className="text-[#3a3530] text-xl font-bold mb-2">영어 실력이 어느 정도예요?</h2>
+            <p className="text-[#7a7268] text-sm mb-6">
               솔직하게 골라주세요!<br />
-              <span className="text-[#4a7a20]">나중에 바꿀 수 있어요</span>
+              <span className="text-[#b0a898]">나중에 바꿀 수 있어요</span>
             </p>
             <div className="space-y-3">
               {LEVELS.map(item => (
                 <button key={item.id} onClick={() => setLevel(item.id)}
                   className="w-full p-4 rounded-2xl text-left transition-all active:scale-95"
                   style={{
-                    background: level === item.id ? 'rgba(42,120,16,0.6)' : 'rgba(10,24,4,0.6)',
-                    border: level === item.id ? '2px solid #7dc84a' : '1px solid #2a5010',
+                    background: level === item.id ? '#edf5e4' : '#ffffff',
+                    border: level === item.id ? '2px solid #6aaa3a' : '1px solid #e0dbd2',
+                    boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
                   }}>
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{item.emoji}</span>
                     <div>
-                      <p className="text-[#c5f07a] font-semibold text-sm">{item.label}</p>
-                      <p className="text-[#6aaa30] text-xs mt-0.5">{item.desc}</p>
+                      <p className="text-[#3a3530] font-semibold text-sm">{item.label}</p>
+                      <p className="text-[#9a9088] text-xs mt-0.5">{item.desc}</p>
                     </div>
-                    {level === item.id && <span className="ml-auto text-[#7dc84a]">✓</span>}
+                    {level === item.id && <span className="ml-auto text-[#6aaa3a]">✓</span>}
                   </div>
                 </button>
               ))}
@@ -169,8 +172,8 @@ export default function OnboardingScreen({ onDone }) {
             disabled={!level}
             className="w-full py-4 rounded-2xl font-bold text-base transition-all active:scale-95"
             style={{
-              background: level ? '#c84040' : 'rgba(20,50,8,0.5)',
-              color: level ? 'white' : '#3a5a18',
+              background: level ? '#c84040' : '#f0ece4',
+              color: level ? 'white' : '#c0b8b0',
             }}>
             산들로그 시작! 🌿
           </button>

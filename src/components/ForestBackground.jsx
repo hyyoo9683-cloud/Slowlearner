@@ -1,79 +1,97 @@
 const moodColors = {
-  sunny: { sky: '#2d5a1b', ground: '#1a3d0a', trunk: '#5c3a1e', leaves: '#3d7a1a' },
-  rain: { sky: '#162d08', ground: '#0f2006', trunk: '#4a2e16', leaves: '#2a5a12' },
-  fog: { sky: '#1e3d10', ground: '#152b0a', trunk: '#4d3820', leaves: '#2e6015' },
-  sunset: { sky: '#1a2e06', ground: '#0f1e04', trunk: '#6b3a1a', leaves: '#4a7a20' },
+  sunny: { sky: '#d4eac8', skyBottom: '#e8f5d8', ground: '#8fc860', trunk: '#8a5a30', leaves: '#5a9a30', leavesLight: '#7abf48' },
+  rain: { sky: '#c0cfe0', skyBottom: '#d8e8f0', ground: '#6a9860', trunk: '#7a5028', leaves: '#4a8028', leavesLight: '#60a040' },
+  fog: { sky: '#dde8dc', skyBottom: '#eaf0e8', ground: '#88a878', trunk: '#8a6040', leaves: '#5a8840', leavesLight: '#78aa58' },
+  sunset: { sky: '#f0d0a0', skyBottom: '#f8e8c0', ground: '#98a050', trunk: '#9a5828', leaves: '#6a9030', leavesLight: '#88b048' },
 };
 
 export default function ForestBackground({ mood = 'sunny' }) {
   const c = moodColors[mood];
   return (
     <svg viewBox="0 0 390 280" xmlns="http://www.w3.org/2000/svg" className="w-full">
-      {/* Sky */}
-      <rect width="390" height="280" fill={c.sky} />
+      {/* Sky gradient */}
+      <defs>
+        <linearGradient id={`sky-${mood}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={c.sky} />
+          <stop offset="100%" stopColor={c.skyBottom} />
+        </linearGradient>
+      </defs>
+      <rect width="390" height="280" fill={`url(#sky-${mood})`} />
 
-      {/* Sun or Moon */}
+      {/* Sun / weather element */}
       {mood === 'sunset' ? (
-        <ellipse cx="320" cy="60" rx="28" ry="28" fill="#d4622a" opacity="0.7" />
+        <>
+          <ellipse cx="300" cy="70" rx="32" ry="32" fill="#f09030" opacity="0.8" />
+          <ellipse cx="300" cy="70" rx="48" ry="48" fill="#f8c060" opacity="0.3" />
+        </>
       ) : mood === 'rain' ? (
         <>
-          <ellipse cx="320" cy="50" rx="22" ry="22" fill="#8aabcc" opacity="0.4" />
-          {[250,270,290,310,330,350].map((x, i) => (
-            <line key={i} x1={x} y1={90} x2={x - 6} y2={110} stroke="#6a9abf" strokeWidth="1.5" opacity="0.5" />
+          <ellipse cx="300" cy="55" rx="40" ry="30" fill="#c0d8f0" opacity="0.8" />
+          <ellipse cx="250" cy="65" rx="35" ry="25" fill="#b8d0e8" opacity="0.7" />
+          {[240,260,280,300,320,340].map((x, i) => (
+            <line key={i} x1={x} y1={95} x2={x - 5} y2={115} stroke="#90b8d8" strokeWidth="1.5" opacity="0.7" />
           ))}
         </>
       ) : mood === 'fog' ? (
         <>
-          <ellipse cx="320" cy="50" rx="22" ry="22" fill="#c8d8c0" opacity="0.3" />
-          <rect x="0" y="100" width="390" height="30" fill="#c8d8c0" opacity="0.15" rx="20" />
-          <rect x="0" y="130" width="390" height="20" fill="#c8d8c0" opacity="0.1" rx="15" />
+          <ellipse cx="300" cy="55" rx="28" ry="28" fill="#e8e8e0" opacity="0.6" />
+          <rect x="0" y="115" width="390" height="25" fill="#d8e0d0" opacity="0.5" rx="15" />
+          <rect x="20" y="140" width="350" height="18" fill="#d0d8c8" opacity="0.4" rx="12" />
         </>
       ) : (
-        <ellipse cx="320" cy="50" rx="26" ry="26" fill="#f5d76e" opacity="0.7" />
+        <>
+          <ellipse cx="300" cy="55" rx="30" ry="30" fill="#ffe080" opacity="0.9" />
+          <ellipse cx="300" cy="55" rx="42" ry="42" fill="#fff0a0" opacity="0.4" />
+        </>
       )}
 
-      {/* Stars (sunny only) */}
-      {mood === 'sunny' && [
-        [40, 30], [80, 20], [150, 35], [200, 18], [240, 40],
-      ].map(([x, y], i) => (
-        <circle key={i} cx={x} cy={y} r="1.5" fill="#d4f0a0" opacity="0.6" />
-      ))}
+      {/* Soft clouds */}
+      {(mood === 'sunny' || mood === 'fog') && (
+        <>
+          <ellipse cx="80" cy="45" rx="40" ry="18" fill="white" opacity="0.7" />
+          <ellipse cx="100" cy="38" rx="28" ry="16" fill="white" opacity="0.6" />
+          <ellipse cx="60" cy="40" rx="25" ry="14" fill="white" opacity="0.6" />
+          <ellipse cx="200" cy="35" rx="35" ry="15" fill="white" opacity="0.5" />
+          <ellipse cx="218" cy="28" rx="22" ry="13" fill="white" opacity="0.5" />
+        </>
+      )}
 
       {/* Ground */}
-      <ellipse cx="195" cy="280" rx="220" ry="40" fill={c.ground} />
+      <ellipse cx="195" cy="285" rx="230" ry="45" fill={c.ground} />
+      <rect x="0" y="240" width="390" height="50" fill={c.ground} />
 
-      {/* Back trees */}
-      {[30, 100, 200, 290, 360].map((x, i) => (
-        <g key={i}>
-          <rect x={x - 5} y={160} width="10" height="60" fill={c.trunk} />
+      {/* Back trees (smaller, lighter) */}
+      {[50, 130, 210, 300, 370].map((x, i) => (
+        <g key={i} opacity="0.7">
+          <rect x={x - 4} y={165} width="8" height="50" fill={c.trunk} />
           <polygon
-            points={`${x},${110 + i * 4} ${x - 32},${200} ${x + 32},${200}`}
-            fill={c.leaves} opacity="0.6"
+            points={`${x},${118 + i * 3} ${x - 28},${195} ${x + 28},${195}`}
+            fill={c.leavesLight}
           />
           <polygon
-            points={`${x},${90 + i * 4} ${x - 24},${155} ${x + 24},${155}`}
-            fill={c.leaves} opacity="0.7"
-          />
-        </g>
-      ))}
-
-      {/* Front trees */}
-      {[0, 80, 310, 390].map((x, i) => (
-        <g key={i}>
-          <rect x={x - 7} y={150} width="14" height="80" fill={c.trunk} />
-          <polygon
-            points={`${x},${80} ${x - 40},${175} ${x + 40},${175}`}
-            fill={c.leaves} opacity="0.9"
-          />
-          <polygon
-            points={`${x},${60} ${x - 30},${120} ${x + 30},${120}`}
+            points={`${x},${98 + i * 3} ${x - 20},${152} ${x + 20},${152}`}
             fill={c.leaves}
           />
         </g>
       ))}
 
-      {/* Path */}
-      <path d="M 160 280 Q 195 240 195 200" stroke="#3a5c20" strokeWidth="20" fill="none" opacity="0.4" />
+      {/* Front trees (larger) */}
+      {[0, 75, 315, 390].map((x, i) => (
+        <g key={i}>
+          <rect x={x - 6} y={155} width="12" height="75" fill={c.trunk} />
+          <polygon
+            points={`${x},${85} ${x - 38},${175} ${x + 38},${175}`}
+            fill={c.leavesLight} opacity="0.95"
+          />
+          <polygon
+            points={`${x},${65} ${x - 28},${118} ${x + 28},${118}`}
+            fill={c.leaves}
+          />
+        </g>
+      ))}
+
+      {/* Dirt path */}
+      <path d="M 155 280 Q 195 250 195 210" stroke="#c8a870" strokeWidth="18" fill="none" opacity="0.5" strokeLinecap="round" />
     </svg>
   );
 }
