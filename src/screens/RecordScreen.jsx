@@ -416,19 +416,6 @@ export default function RecordScreen() {
         style={{ background: '#ffffff', border: '1px solid #e0dbd2', color: '#3a3530' }}
       />
 
-      <button
-        onClick={handleSuggest}
-        disabled={text.length < 5 || loading}
-        className="w-full py-4 rounded-2xl font-semibold text-sm transition-all active:scale-95"
-        style={{
-          background: text.length >= 5 ? '#edf5e4' : '#f8f6f2',
-          color: text.length >= 5 ? '#4a8a20' : '#c0b8b0',
-          border: text.length >= 5 ? '1.5px solid #c8e8a0' : '1px solid #e8e4dc',
-          cursor: text.length < 5 ? 'not-allowed' : 'pointer',
-        }}>
-        {loading ? '✨ AI가 생각하는 중...' : '✨ AI 제안 보기'}
-      </button>
-
       {error && <p className="text-[#c08030] text-xs text-center">{error}</p>}
 
       {suggestions.length > 0 && (
@@ -449,13 +436,35 @@ export default function RecordScreen() {
               {selected === s && <span className="ml-2 text-[#6aaa3a]">✓</span>}
             </button>
           ))}
-          <button onClick={handleSave}
-            className="w-full py-4 rounded-2xl font-bold text-sm transition-all active:scale-95 mt-2"
-            style={{ background: '#c84040', color: 'white' }}>
-            기록 저장하기 🌿
-          </button>
         </div>
       )}
+
+      <div className="flex gap-2">
+        <button
+          onClick={handleSuggest}
+          disabled={text.length < 5 || loading}
+          className="py-4 rounded-2xl font-semibold text-sm transition-all active:scale-95"
+          style={{
+            flex: '0 0 auto',
+            paddingLeft: 16,
+            paddingRight: 16,
+            background: text.length >= 5 ? '#f0ece4' : '#f8f6f2',
+            color: text.length >= 5 ? '#7a7268' : '#c0b8b0',
+            border: '1px solid #e0dbd2',
+          }}>
+          {loading ? '⏳' : '✨ AI'}
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={text.length < 2}
+          className="flex-1 py-4 rounded-2xl font-bold text-sm transition-all active:scale-95"
+          style={{
+            background: text.length >= 2 ? '#c84040' : '#f0ece4',
+            color: text.length >= 2 ? 'white' : '#c0b8b0',
+          }}>
+          기록 저장하기 🌿
+        </button>
+      </div>
     </div>
   );
 }
