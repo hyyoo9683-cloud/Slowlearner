@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { getSuggestions } from '../utils/anthropic';
+import { getSuggestions, getStoredKey } from '../utils/gemini';
 import { saveRecord } from '../utils/storage';
 
 const DEMO_SUGGESTIONS = {
@@ -41,17 +41,22 @@ export default function RecordScreen() {
     setSuggestions([]);
     setSelected(null);
     try {
-      const key = import.meta.env.VITE_ANTHROPIC_API_KEY;
+      const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY;
       let result;
-      if (!key || key === 'your_key_here') {
-        await new Promise(r => setTimeout(r, 1000));
+      if (!hasKey) {
+        await new Promise(r => setTimeout(r, 800));
         result = DEMO_SUGGESTIONS[mode];
+        setError('데모 모드예요. 설정에서 Gemini API 키를 입력하면 나만의 문장을 만들 수 있어요! ⚙️');
       } else {
         result = await getSuggestions(text, mode);
       }
       setSuggestions(result);
     } catch (e) {
-      setError('AI 제안을 가져오지 못했어요. 잠시 후 다시 시도해주세요.');
+      if (e.message === 'NO_KEY') {
+        setError('설정에서 Gemini API 키를 입력해주세요. ⚙️');
+      } else {
+        setError('AI 제안을 가져오지 못했어요. 잠시 후 다시 시도해주세요.');
+      }
       setSuggestions(DEMO_SUGGESTIONS[mode]);
     } finally {
       setLoading(false);

@@ -5,6 +5,7 @@ import RecordScreen from './screens/RecordScreen';
 import NewsScreen from './screens/NewsScreen';
 import GalleryScreen from './screens/GalleryScreen';
 import BooksScreen from './screens/BooksScreen';
+import SettingsScreen from './screens/SettingsScreen';
 
 export default function App() {
   const [tab, setTab] = useState('home');
@@ -18,6 +19,7 @@ export default function App() {
       case 'news': return <NewsScreen onNavigate={navigate} />;
       case 'gallery': return <GalleryScreen onNavigate={navigate} />;
       case 'books': return <BooksScreen />;
+      case 'settings': return <SettingsScreen />;
       default: return <HomeScreen onNavigate={navigate} />;
     }
   };
