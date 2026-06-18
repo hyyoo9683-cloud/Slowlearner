@@ -235,7 +235,7 @@ export default function RecordScreen() {
       if (e.message === 'NO_KEY') {
         setError('설정에서 Gemini API 키를 입력해주세요. ⚙️');
       } else {
-        setError('AI 제안을 가져오지 못했어요. 잠시 후 다시 시도해주세요.');
+        setError(`오류: ${e.message}`);
       }
       setSuggestions(DEMO_SUGGESTIONS[mode]);
     } finally {
