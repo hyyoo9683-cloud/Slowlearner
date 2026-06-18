@@ -96,6 +96,51 @@ Keep words simple and useful for daily journaling. Max 4 words.`;
   return JSON.parse(match[0]);
 }
 
+// 영어 원문 분석 — 한/영 요약 + 핵심 단어
+export async function analyzeArticle(text) {
+  const prompt = `You are an English learning assistant for Korean speakers. Analyze this English text.
+
+Text: ${text.slice(0, 2000)}
+
+Return JSON only:
+{
+  "koSummary": ["한국어 요약 1문장", "한국어 요약 2문장", "한국어 요약 3문장"],
+  "enSummary": ["English summary sentence 1", "English summary sentence 2", "English summary sentence 3"],
+  "words": [{"english": "word", "korean": "뜻", "example": "example sentence"}],
+  "level": "easy|medium|hard",
+  "topic": "짧은 주제 (10자 이내)"
+}
+Keep words to 4 items. Choose words that are useful and interesting for Korean learners.`;
+
+  const raw = await callGemini([{ parts: [{ text: prompt }] }]);
+  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('AI 응답 형식 오류. 다시 시도해주세요.');
+  return JSON.parse(match[0]);
+}
+
+// 영어 글 첨삭 — 문법/자연스러움/표현 피드백
+export async function proofreadText(original, userText) {
+  const prompt = `You are a friendly English writing tutor for Korean learners. Review the student's English writing.
+
+${original ? `Original article context: ${original.slice(0, 500)}\n\n` : ''}Student's writing: ${userText}
+
+Return JSON only:
+{
+  "corrected": "corrected version of the student's text",
+  "feedback": ["specific feedback point 1 in Korean", "specific feedback point 2 in Korean"],
+  "good": "one thing they did well, in Korean",
+  "score": 85
+}
+Be encouraging and specific. Score out of 100. If the text is already good, say so warmly.`;
+
+  const raw = await callGemini([{ parts: [{ text: prompt }] }]);
+  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('AI 응답 형식 오류. 다시 시도해주세요.');
+  return JSON.parse(match[0]);
+}
+
 // 뉴스 기사 한국어 3줄 요약 + 핵심 단어
 export async function summarizeNews(title, description) {
   const prompt = `You are an English learning assistant for Korean speakers. Summarize this news article.

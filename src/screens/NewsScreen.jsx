@@ -48,6 +48,9 @@ export default function NewsScreen({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
   const [summarizing, setSummarizing] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const [urlLoading, setUrlLoading] = useState(false);
+  const [urlError, setUrlError] = useState('');
   const [writing, setWriting] = useState(null); // index of news being written about
   const [writeText, setWriteText] = useState('');
   const [writeMode, setWriteMode] = useState('korean');
@@ -286,6 +289,43 @@ export default function NewsScreen({ onNavigate }) {
     );
   }
 
+  const handleFetchUrl = async () => {
+    setUrlError('');
+    setUrlLoading(true);
+    try {
+      const resp = await fetch(`/api/fetch-article?url=${encodeURIComponent(urlInput)}`);
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error);
+      const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY;
+      const newItem = {
+        category: '🔗 직접 추가',
+        title: data.title || urlInput,
+        koTitle: '번역 중...',
+        summary: [data.description || data.text?.slice(0, 100) || ''],
+        enSummary: [],
+        words: [],
+        needsSummary: hasKey,
+        raw: { title: data.title, description: data.text },
+      };
+      const updated = [newItem, ...news];
+      setNews(updated);
+      setUrlInput('');
+      setExpanded(0);
+      if (hasKey) {
+        try {
+          const result = await summarizeNews(data.title, data.text?.slice(0, 500));
+          const emoji = CATEGORY_EMOJI[result.category] || '🔗';
+          updated[0] = { ...updated[0], category: `${emoji} ${result.category}`, koTitle: result.koTitle, summary: result.summary, enSummary: result.enSummary || [], words: result.words, needsSummary: false };
+          setNews([...updated]);
+        } catch {}
+      }
+    } catch (e) {
+      setUrlError('기사를 가져오지 못했어요. URL을 확인해주세요.');
+    } finally {
+      setUrlLoading(false);
+    }
+  };
+
   return (
     <div className="tab-content px-4 pt-4 pb-24 space-y-4">
       <div className="flex items-center justify-between">
@@ -299,6 +339,32 @@ export default function NewsScreen({ onNavigate }) {
           )}
           <button onClick={fetchNews} className="text-[#6aaa3a] text-xs font-medium">새로고침</button>
         </div>
+      </div>
+
+      {/* URL 입력 */}
+      <div className="space-y-1.5">
+        <div className="flex gap-2">
+          <input
+            value={urlInput}
+            onChange={e => setUrlInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && urlInput && handleFetchUrl()}
+            placeholder="기사 URL 붙여넣기..."
+            className="flex-1 py-2.5 px-3 rounded-2xl text-sm outline-none"
+            style={{ background: '#ffffff', border: '1px solid #e0dbd2', color: '#3a3530' }}
+          />
+          <button
+            onClick={handleFetchUrl}
+            disabled={!urlInput || urlLoading}
+            className="px-4 py-2.5 rounded-2xl text-sm font-semibold transition-all active:scale-95"
+            style={{
+              background: urlInput ? '#edf5e4' : '#f8f6f2',
+              color: urlInput ? '#4a8a20' : '#c0b8b0',
+              border: urlInput ? '1px solid #c8e8a0' : '1px solid #e8e4dc',
+            }}>
+            {urlLoading ? '⏳' : '분석'}
+          </button>
+        </div>
+        {urlError && <p className="text-[#c08030] text-xs px-1">{urlError}</p>}
       </div>
 
       {loading && (

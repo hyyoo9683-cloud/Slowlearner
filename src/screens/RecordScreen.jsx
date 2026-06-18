@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { getSuggestions, analyzePhoto, getStoredKey } from '../utils/gemini';
+import { getSuggestions, analyzePhoto, analyzeArticle, proofreadText, getStoredKey } from '../utils/gemini';
 import { saveRecord, loadRecords } from '../utils/storage';
 
 const DRAFT_KEY = 'slowrunner_draft';
@@ -151,6 +151,12 @@ export default function RecordScreen() {
   const [sharing, setSharing] = useState(false);
   const [photoAnalysis, setPhotoAnalysis] = useState(null);
   const [photoAnalyzing, setPhotoAnalyzing] = useState(false);
+  // 원문 분석 모드
+  const [articleText, setArticleText] = useState('');
+  const [articleAnalysis, setArticleAnalysis] = useState(null);
+  const [articleAnalyzing, setArticleAnalyzing] = useState(false);
+  const [proofread, setProofread] = useState(null);
+  const [proofreading, setProofreading] = useState(false);
   const fileRef = useRef();
 
   useEffect(() => {
@@ -348,11 +354,12 @@ export default function RecordScreen() {
       <div className="flex rounded-2xl overflow-hidden"
         style={{ background: '#f0ece4', border: '1px solid #e0dbd2' }}>
         {[
-          { id: 'korean', label: '한국어로 써요' },
-          { id: 'english', label: '영어로 써요' },
+          { id: 'korean', label: '한국어로' },
+          { id: 'english', label: '영어로' },
+          { id: 'article', label: '📄 원문 분석' },
         ].map(m => (
-          <button key={m.id} onClick={() => { setMode(m.id); setSuggestions([]); setSelected(null); }}
-            className="flex-1 py-2.5 text-sm font-semibold transition-all"
+          <button key={m.id} onClick={() => { setMode(m.id); setSuggestions([]); setSelected(null); setArticleAnalysis(null); setProofread(null); }}
+            className="flex-1 py-2.5 text-xs font-semibold transition-all"
             style={{
               background: mode === m.id ? '#ffffff' : 'transparent',
               color: mode === m.id ? '#3a3530' : '#9a9088',
@@ -363,8 +370,172 @@ export default function RecordScreen() {
         ))}
       </div>
 
-      {/* Photo Upload */}
-      <button onClick={() => fileRef.current?.click()}
+      {/* 원문 분석 모드 */}
+      {mode === 'article' && (
+        <div className="space-y-3">
+          <textarea
+            value={articleText}
+            onChange={e => setArticleText(e.target.value)}
+            placeholder={'영어 기사나 글을 여기에 붙여넣어요...\n\nPaste any English article or text here.'}
+            className="w-full h-36 p-4 rounded-2xl text-sm resize-none outline-none leading-relaxed"
+            style={{ background: '#ffffff', border: '1px solid #e0dbd2', color: '#3a3530' }}
+          />
+          <button
+            onClick={async () => {
+              setArticleAnalyzing(true);
+              setArticleAnalysis(null);
+              try {
+                const result = await analyzeArticle(articleText);
+                setArticleAnalysis(result);
+              } catch (e) {
+                setError(e.message);
+              } finally {
+                setArticleAnalyzing(false);
+              }
+            }}
+            disabled={articleText.length < 20 || articleAnalyzing}
+            className="w-full py-3 rounded-2xl text-sm font-semibold transition-all active:scale-95"
+            style={{
+              background: articleText.length >= 20 ? '#edf5e4' : '#f8f6f2',
+              color: articleText.length >= 20 ? '#4a8a20' : '#c0b8b0',
+              border: articleText.length >= 20 ? '1.5px solid #c8e8a0' : '1px solid #e8e4dc',
+            }}>
+            {articleAnalyzing ? '✨ 분석 중...' : '✨ AI 분석하기'}
+          </button>
+
+          {articleAnalysis && (
+            <div className="space-y-3 slide-up">
+              {/* 주제 + 난이도 */}
+              <div className="flex gap-2 items-center">
+                <span className="text-xs px-2 py-1 rounded-full font-medium"
+                  style={{ background: '#edf5e4', color: '#4a8a20', border: '1px solid #c8e8a0' }}>
+                  {articleAnalysis.topic}
+                </span>
+                <span className="text-xs px-2 py-1 rounded-full font-medium"
+                  style={{ background: '#f8f6f2', color: '#9a9088', border: '1px solid #e0dbd2' }}>
+                  {articleAnalysis.level === 'easy' ? '🟢 쉬움' : articleAnalysis.level === 'medium' ? '🟡 중간' : '🔴 어려움'}
+                </span>
+              </div>
+
+              {/* 한/영 요약 */}
+              <div className="p-3 rounded-2xl space-y-2"
+                style={{ background: '#f8f6f2', border: '1px solid #ede9e2' }}>
+                <p className="text-[#9a9088] text-xs font-semibold">요약</p>
+                {articleAnalysis.koSummary?.map((s, i) => (
+                  <div key={i}>
+                    <p className="text-[#5a5550] text-xs leading-relaxed">
+                      <span className="text-[#6aaa3a] mr-1">·</span>{s}
+                    </p>
+                    {articleAnalysis.enSummary?.[i] && (
+                      <p className="text-[#a0a898] text-xs leading-relaxed ml-3 italic">
+                        {articleAnalysis.enSummary[i]}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* 핵심 단어 */}
+              {articleAnalysis.words?.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[#9a9088] text-xs font-semibold">핵심 단어</p>
+                  {articleAnalysis.words.map((w, i) => (
+                    <div key={i} className="p-3 rounded-xl"
+                      style={{ background: '#ffffff', border: '1px solid #ede9e2' }}>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[#3a3530] text-sm font-semibold">{w.english}</span>
+                        <span className="text-[#9a9088] text-xs">· {w.korean}</span>
+                      </div>
+                      {w.example && <p className="text-[#b0a898] text-xs italic">{w.example}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 내 글 쓰기 + 첨삭 */}
+              <div className="space-y-2 pt-1">
+                <p className="text-[#9a9088] text-xs font-semibold">✏️ 내가 직접 요약해볼게요</p>
+                <textarea
+                  value={text}
+                  onChange={e => setText(e.target.value)}
+                  placeholder="Write a short summary or your thoughts in English..."
+                  className="w-full h-24 p-4 rounded-2xl text-sm resize-none outline-none leading-relaxed"
+                  style={{ background: '#ffffff', border: '1px solid #e0dbd2', color: '#3a3530' }}
+                />
+                {proofread && (
+                  <div className="p-3 rounded-2xl space-y-2 slide-up"
+                    style={{ background: '#fffbf0', border: '1.5px solid #e8d880' }}>
+                    <div className="flex items-center justify-between">
+                      <p className="text-[#a07820] text-xs font-semibold">AI 첨삭 결과</p>
+                      <span className="text-sm font-bold" style={{ color: proofread.score >= 80 ? '#4a8a20' : '#c08030' }}>
+                        {proofread.score}점
+                      </span>
+                    </div>
+                    {proofread.good && (
+                      <p className="text-[#4a8a20] text-xs">👍 {proofread.good}</p>
+                    )}
+                    {proofread.corrected && proofread.corrected !== text && (
+                      <div>
+                        <p className="text-[#9a9088] text-[10px] mb-1">교정된 문장</p>
+                        <p className="text-[#3a3530] text-xs leading-relaxed p-2 rounded-xl"
+                          style={{ background: '#ffffff', border: '1px solid #e8d880' }}>
+                          {proofread.corrected}
+                        </p>
+                        <button onClick={() => setText(proofread.corrected)}
+                          className="text-[#6aaa3a] text-xs mt-1 underline">
+                          이걸로 바꾸기
+                        </button>
+                      </div>
+                    )}
+                    {proofread.feedback?.map((f, i) => (
+                      <p key={i} className="text-[#7a7268] text-xs leading-relaxed">
+                        <span className="text-[#c08030] mr-1">·</span>{f}
+                      </p>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      setProofreading(true);
+                      setProofread(null);
+                      try {
+                        const result = await proofreadText(articleText, text);
+                        setProofread(result);
+                      } catch (e) {
+                        setError(e.message);
+                      } finally {
+                        setProofreading(false);
+                      }
+                    }}
+                    disabled={text.length < 5 || proofreading}
+                    className="py-3 px-4 rounded-2xl text-xs font-semibold transition-all active:scale-95"
+                    style={{
+                      background: text.length >= 5 ? '#fffbf0' : '#f8f6f2',
+                      color: text.length >= 5 ? '#a07820' : '#c0b8b0',
+                      border: text.length >= 5 ? '1px solid #e8d880' : '1px solid #e8e4dc',
+                    }}>
+                    {proofreading ? '⏳' : '✏️ 첨삭받기'}
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={text.length < 2}
+                    className="flex-1 py-3 rounded-2xl font-bold text-sm transition-all active:scale-95"
+                    style={{
+                      background: text.length >= 2 ? '#c84040' : '#f0ece4',
+                      color: text.length >= 2 ? 'white' : '#c0b8b0',
+                    }}>
+                    기록 저장하기 🌿
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Photo Upload — 원문 분석 모드에서는 숨김 */}
+      {mode === 'article' ? null : <button onClick={() => fileRef.current?.click()}
         className="w-full rounded-2xl overflow-hidden transition-all active:scale-95"
         style={{ border: '2px dashed #d0e8b0', background: '#fafdf6' }}>
         {photoUrl ? (
@@ -375,7 +546,7 @@ export default function RecordScreen() {
             <p className="text-[#9a9088] text-sm">사진 추가하기</p>
           </div>
         )}
-      </button>
+      </button>}
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
 
       {photoAnalyzing && (
@@ -406,7 +577,7 @@ export default function RecordScreen() {
         </div>
       )}
 
-      <textarea
+      {mode !== 'article' && <textarea
         value={text}
         onChange={e => setText(e.target.value)}
         placeholder={mode === 'korean'
@@ -414,11 +585,11 @@ export default function RecordScreen() {
           : 'Write about your moment in English...\nExample: I saw baby kittens playing today'}
         className="w-full h-28 p-4 rounded-2xl text-sm resize-none outline-none leading-relaxed"
         style={{ background: '#ffffff', border: '1px solid #e0dbd2', color: '#3a3530' }}
-      />
+      />}
 
       {error && <p className="text-[#c08030] text-xs text-center">{error}</p>}
 
-      {suggestions.length > 0 && (
+      {mode !== 'article' && suggestions.length > 0 && (
         <div className="space-y-2 slide-up">
           <p className="text-[#9a9088] text-xs font-semibold">
             {mode === 'korean' ? '이렇게 영어로 표현할 수 있어요!' : '더 자연스러운 표현이에요!'}
@@ -439,7 +610,7 @@ export default function RecordScreen() {
         </div>
       )}
 
-      <div className="flex gap-2">
+      {mode !== 'article' && <div className="flex gap-2">
         <button
           onClick={handleSuggest}
           disabled={text.length < 5 || loading}
@@ -464,7 +635,7 @@ export default function RecordScreen() {
           }}>
           기록 저장하기 🌿
         </button>
-      </div>
+      </div>}
     </div>
   );
 }
