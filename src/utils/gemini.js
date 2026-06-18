@@ -23,7 +23,7 @@ async function callGemini(contents) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         contents,
-        generationConfig: { maxOutputTokens: 512, temperature: 0.7 },
+        generationConfig: { maxOutputTokens: 512, temperature: 0.7, responseMimeType: 'application/json' },
       }),
     }
   );
