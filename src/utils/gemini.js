@@ -36,8 +36,11 @@ async function callGemini(contents, retries = 3) {
 
     if (!resp.ok) throw new Error(`API error: ${await resp.text()}`);
     const data = await resp.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('AI 응답이 비어있어요. 잠시 후 다시 시도해주세요.');
+    return text;
   }
+  throw new Error('서버가 혼잡해요. 잠시 후 다시 시도해주세요.');
 }
 
 // 텍스트 기반 영어 문장 제안
@@ -48,9 +51,15 @@ export async function getSuggestions(text, mode) {
 
   const raw = await callGemini([{ parts: [{ text: prompt }] }]);
   const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  const match = cleaned.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('Invalid response format');
-  return JSON.parse(match[0]).suggestions;
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed.suggestions) return parsed.suggestions;
+  } catch {}
+  const match = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+  if (!match) throw new Error('AI 응답 형식 오류. 다시 시도해주세요.');
+  const parsed = JSON.parse(match[0]);
+  return Array.isArray(parsed) ? parsed : parsed.suggestions;
 }
 
 // 사진 분석 — 관련 영어 단어 + 예문 제안
