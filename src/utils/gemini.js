@@ -1,4 +1,4 @@
-const MODEL = 'gemini-2.0-flash';
+const MODEL = 'gemini-1.5-flash-latest';
 
 export function getStoredKey() {
   return localStorage.getItem('slowrunner_gemini_key') || '';
