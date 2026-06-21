@@ -383,7 +383,7 @@ export default function NewsScreen({ onNavigate }) {
       </div>
 
       {/* 카테고리 필터 */}
-      <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+      <div className="-mx-4 flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', paddingLeft: '1rem', paddingRight: '1rem' }}>
         <button
           onClick={() => setActiveFilter(null)}
           className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
