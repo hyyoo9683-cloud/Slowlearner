@@ -28,8 +28,8 @@ async function callGemini(contents, retries = 3) {
             maxOutputTokens: 1024,
             temperature: 0.7,
             responseMimeType: 'application/json',
+            thinkingConfig: { thinkingBudget: 0 },
           },
-          thinkingConfig: { thinkingBudget: 0 },
         }),
       }
     );
