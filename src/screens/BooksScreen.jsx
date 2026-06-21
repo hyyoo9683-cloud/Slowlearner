@@ -143,7 +143,7 @@ export default function BooksScreen({ onNavigate }) {
   return (
     <div className="tab-content px-4 pt-4 pb-24 space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-[#3a3530] font-bold text-lg">미디어</h2>
+        <h2 className="text-white font-bold text-lg">미디어</h2>
         <span className="text-xs px-2 py-1 rounded-full font-medium" style={{ background: '#edf5e4', color: '#4a8a20' }}>
           {interestLabel} 기반
         </span>
@@ -151,7 +151,7 @@ export default function BooksScreen({ onNavigate }) {
 
       {/* 오늘의 짧은 글 */}
       <section>
-        <p className="text-[#3a3530] text-sm font-bold mb-2">📰 오늘의 짧은 글</p>
+        <p className="text-white text-sm font-bold mb-2">📰 오늘의 짧은 글</p>
         <div className="p-4 rounded-2xl space-y-3" style={{ background: '#faf8f3', border: '1px solid #ede9e2', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
           {articleLoading ? (
             <div className="space-y-2">
@@ -161,7 +161,7 @@ export default function BooksScreen({ onNavigate }) {
             </div>
           ) : article ? (
             <>
-              <p className="text-[#3a3530] text-sm font-semibold leading-tight">{article.title}</p>
+              <p className="text-white text-sm font-semibold leading-tight">{article.title}</p>
               <p className="text-[#7a7268] text-xs leading-relaxed">{article.body?.slice(0, 200)}{article.body?.length > 200 ? '...' : ''}</p>
               <div className="flex items-center gap-2 pt-1">
                 <button onClick={speakArticle}
@@ -186,13 +186,13 @@ export default function BooksScreen({ onNavigate }) {
 
       {/* 팟캐스트 추천 */}
       <section>
-        <p className="text-[#3a3530] text-sm font-bold mb-2">🎧 팟캐스트 추천</p>
+        <p className="text-white text-sm font-bold mb-2">🎧 팟캐스트 추천</p>
         <div className="space-y-2">
           {podcasts.map((p, i) => (
             <div key={i} className="p-3 rounded-2xl flex items-center gap-3" style={{ background: '#faf8f3', border: '1px solid #ede9e2' }}>
               <span className="text-2xl flex-shrink-0">{p.emoji}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-[#3a3530] text-sm font-semibold truncate">{p.title}</p>
+                <p className="text-white text-sm font-semibold truncate">{p.title}</p>
                 <p className="text-[#9a9088] text-xs leading-snug mt-0.5">{p.desc}</p>
               </div>
               <div className="flex flex-col gap-1 flex-shrink-0">
@@ -210,7 +210,7 @@ export default function BooksScreen({ onNavigate }) {
 
       {/* 유튜브 추천 */}
       <section>
-        <p className="text-[#3a3530] text-sm font-bold mb-2">📺 유튜브 추천</p>
+        <p className="text-white text-sm font-bold mb-2">📺 유튜브 추천</p>
         <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           {videos.map((v, i) => (
             <a key={i} href={v.url} target="_blank" rel="noopener noreferrer"
@@ -220,7 +220,7 @@ export default function BooksScreen({ onNavigate }) {
                 style={{ background: '#f0ece4' }}>
                 {v.emoji}
               </div>
-              <p className="text-[#3a3530] text-xs font-bold leading-tight">{v.title}</p>
+              <p className="text-white text-xs font-bold leading-tight">{v.title}</p>
               <p className="text-[#9a9088] text-[10px] leading-snug">{v.desc}</p>
               <p className="text-[#ff4444] text-[10px] font-semibold">▶ YouTube →</p>
             </a>
@@ -230,11 +230,11 @@ export default function BooksScreen({ onNavigate }) {
 
       {/* 책 한 줄 */}
       <section>
-        <p className="text-[#3a3530] text-sm font-bold mb-2">📚 이런 책은 어때요?</p>
+        <p className="text-white text-sm font-bold mb-2">📚 이런 책은 어때요?</p>
         <div className="p-3 rounded-2xl flex items-center gap-3" style={{ background: '#faf8f3', border: '1px solid #ede9e2' }}>
           <span className="text-3xl">📖</span>
           <div>
-            <p className="text-[#3a3530] text-sm font-semibold">{book.title}</p>
+            <p className="text-white text-sm font-semibold">{book.title}</p>
             <p className="text-[#9a9088] text-[11px]">{book.author}</p>
             <p className="text-[#7a7268] text-xs mt-1 leading-snug">{book.tip}</p>
           </div>
