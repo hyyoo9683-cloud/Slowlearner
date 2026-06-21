@@ -158,6 +158,10 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
   const [proofreading, setProofreading] = useState(false);
   const fileRef = useRef();
   const debounceRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const [recording, setRecording] = useState(false);
+  const [recordLang, setRecordLang] = useState('ko-KR');
+  const [speakingIdx, setSpeakingIdx] = useState(null);
 
   // Auto-save draft
   useEffect(() => {
@@ -268,6 +272,52 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;
   });
+
+  const toggleRecording = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { setError('이 브라우저는 음성 입력을 지원하지 않아요. Chrome을 사용해주세요.'); return; }
+
+    if (recording) {
+      recognitionRef.current?.stop();
+      setRecording(false);
+      return;
+    }
+
+    const rec = new SR();
+    rec.lang = recordLang;
+    rec.continuous = true;
+    rec.interimResults = true;
+    recognitionRef.current = rec;
+
+    let finalText = text;
+    rec.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) finalText += e.results[i][0].transcript;
+        else interim = e.results[i][0].transcript;
+      }
+      setText(finalText + interim);
+    };
+    rec.onerror = () => { setRecording(false); };
+    rec.onend = () => { setRecording(false); setText(finalText); };
+    rec.start();
+    setRecording(true);
+  };
+
+  const speakText = (txt, idx) => {
+    window.speechSynthesis.cancel();
+    if (speakingIdx === idx) { setSpeakingIdx(null); return; }
+    const utt = new SpeechSynthesisUtterance(txt);
+    utt.lang = 'en-US';
+    utt.rate = 0.9;
+    const voices = window.speechSynthesis.getVoices();
+    const enVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Samantha') || v.name.includes('Google US') || v.name.includes('Karen') || v.name.includes('Daniel'))) || voices.find(v => v.lang.startsWith('en'));
+    if (enVoice) utt.voice = enVoice;
+    utt.onend = () => setSpeakingIdx(null);
+    utt.onerror = () => setSpeakingIdx(null);
+    setSpeakingIdx(idx);
+    window.speechSynthesis.speak(utt);
+  };
 
   const handleSuggest = async () => {
     setError('');
@@ -726,15 +776,48 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
         </div>
       )}
 
-      {mode !== 'article' && <textarea
-        value={text}
-        onChange={e => setText(e.target.value)}
-        placeholder={mode === 'korean'
-          ? '오늘 어떤 순간이 있었나요? 한국어로 적어보세요...\n예: 오늘 이끼 낀 돌담을 지나쳤어요'
-          : 'Write about your moment in English...\nExample: I saw baby kittens playing today'}
-        className="w-full h-28 p-4 rounded-2xl text-sm resize-none outline-none leading-relaxed"
-        style={{ background: '#ffffff', border: '1px solid #e0dbd2', color: '#3a3530' }}
-      />}
+      {mode !== 'article' && (
+        <div className="relative">
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            placeholder={mode === 'korean'
+              ? '오늘 어떤 순간이 있었나요? 한국어로 적어보세요...\n예: 오늘 이끼 낀 돌담을 지나쳤어요'
+              : 'Write about your moment in English...\nExample: I saw baby kittens playing today'}
+            className="w-full h-28 p-4 pr-14 rounded-2xl text-sm resize-none outline-none leading-relaxed"
+            style={{ background: '#ffffff', border: recording ? '2px solid #e05050' : '1px solid #e0dbd2', color: '#3a3530' }}
+          />
+          <div className="absolute bottom-3 right-3 flex flex-col items-center gap-1">
+            <button
+              onClick={toggleRecording}
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
+              style={{
+                background: recording ? '#e05050' : '#edf5e4',
+                boxShadow: recording ? '0 0 0 4px rgba(224,80,80,0.2)' : '0 1px 4px rgba(0,0,0,0.1)',
+              }}
+              title={recording ? '녹음 중지' : '음성 입력'}>
+              {recording ? '⏹' : '🎙️'}
+            </button>
+            {recording && (
+              <button
+                onClick={() => setRecordLang(l => l === 'ko-KR' ? 'en-US' : 'ko-KR')}
+                className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                style={{ background: '#fff0f0', color: '#e05050', border: '1px solid #f8c0c0' }}>
+                {recordLang === 'ko-KR' ? '한' : 'EN'}
+              </button>
+            )}
+          </div>
+          {recording && (
+            <div className="flex items-center gap-1.5 mt-1.5 px-1">
+              <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+              <span className="text-[#e05050] text-xs">
+                녹음 중 · {recordLang === 'ko-KR' ? '한국어' : 'English'}
+                <span className="text-[#b0a898] ml-1">— 탭해서 언어 전환</span>
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {error && <p className="text-[#c08030] text-xs text-center">{error}</p>}
 
@@ -770,7 +853,16 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
                   <span className="leading-relaxed font-medium flex-1">
                     <span className="text-[#6aaa3a] mr-1.5 font-bold">{i + 1}.</span>{mainText}
                   </span>
-                  {isSelected && <span className="text-[#6aaa3a] text-base shrink-0">✓</span>}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={e => { e.stopPropagation(); speakText(mainText, i); }}
+                      className="w-7 h-7 rounded-full flex items-center justify-center transition-all"
+                      style={{ background: speakingIdx === i ? '#edf5e4' : '#f8f6f2', border: speakingIdx === i ? '1.5px solid #6aaa3a' : '1px solid #e0dbd2' }}
+                      title="발음 듣기">
+                      <span className="text-xs">{speakingIdx === i ? '🔊' : '▶'}</span>
+                    </button>
+                    {isSelected && <span className="text-[#6aaa3a] text-base">✓</span>}
+                  </div>
                 </div>
                 {s.korean_translation && (
                   <p className="text-[#7a8a70] text-xs leading-relaxed pl-4">
