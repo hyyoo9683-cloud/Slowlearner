@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { getSuggestions, analyzePhoto, analyzeArticle, proofreadText, getStoredKey } from '../utils/gemini';
 import { saveRecord, loadRecords } from '../utils/storage';
 
-const DRAFT_KEY = 'slowrunner_draft';
+const DRAFT_KEY = 'sandalog_draft';
 function saveDraft(data) {
   try {
     const { photoUrl: _, ...rest } = data;
@@ -14,14 +14,38 @@ function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
 
 const DEMO_SUGGESTIONS = {
   korean: [
-    'I came across a moss-covered stone wall along the path.',
-    'The old stone wall was draped in soft, green moss.',
-    'A beautiful mossy stone wall caught my eye on my walk.',
+    {
+      english: 'I came across a moss-covered stone wall along the path.',
+      korean_translation: '길을 걷다가 이끼로 덮인 돌담을 발견했어요.',
+      vocabulary: [{ word: 'came across', meaning: '우연히 발견하다' }, { word: 'moss-covered', meaning: '이끼로 덮인' }],
+    },
+    {
+      english: 'The old stone wall was draped in soft, green moss.',
+      korean_translation: '오래된 돌담이 부드럽고 푸른 이끼로 뒤덮여 있었어요.',
+      vocabulary: [{ word: 'draped', meaning: '덮인, 감싸인' }, { word: 'soft', meaning: '부드러운' }],
+    },
+    {
+      english: 'A beautiful mossy stone wall caught my eye on my walk.',
+      korean_translation: '산책 중에 아름다운 이끼 낀 돌담이 눈에 들어왔어요.',
+      vocabulary: [{ word: 'caught my eye', meaning: '눈에 띄다' }, { word: 'mossy', meaning: '이끼가 낀' }],
+    },
   ],
   english: [
-    'The kittens were frolicking playfully in the warm sunlight.',
-    'I watched the tiny kittens tumble and leap around each other.',
-    'A group of little kittens were chasing each other joyfully.',
+    {
+      improved: 'The kittens were frolicking playfully in the warm sunlight.',
+      korean_translation: '새끼 고양이들이 따뜻한 햇빛 속에서 신나게 뛰어놀고 있었어요.',
+      changes: [{ original: 'playing', improved: 'frolicking', reason_korean: '더 생동감 있고 귀여운 표현이에요' }],
+    },
+    {
+      improved: 'I watched the tiny kittens tumble and leap around each other.',
+      korean_translation: '작은 고양이들이 서로 주변에서 구르고 뛰는 모습을 지켜봤어요.',
+      changes: [{ original: 'run', improved: 'tumble and leap', reason_korean: '고양이의 움직임을 더 생생하게 표현해요' }],
+    },
+    {
+      improved: 'A group of little kittens were chasing each other joyfully.',
+      korean_translation: '작은 고양이들 무리가 즐겁게 서로를 쫓아다니고 있었어요.',
+      changes: [{ original: 'small', improved: 'little', reason_korean: '더 자연스럽고 따뜻한 표현이에요' }],
+    },
   ],
 };
 
@@ -134,10 +158,11 @@ function wrapText(ctx, text, maxWidth, fontSize) {
   return lines.slice(0, 3);
 }
 
-export default function RecordScreen({ prefillText, onClearPrefill }) {
+export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }) {
   const draft = loadDraft();
+  const [showDraftBanner, setShowDraftBanner] = useState(!prefillText && !!draft?.text);
   const [mode, setMode] = useState(prefillText ? 'english' : (draft?.mode || 'korean'));
-  const [text, setText] = useState(prefillText || draft?.text || '');
+  const [text, setText] = useState(prefillText || '');
 
   useEffect(() => {
     if (prefillText) {
@@ -146,7 +171,7 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
       onClearPrefill?.();
     }
   }, [prefillText]);
-  const [photoUrl, setPhotoUrl] = useState(draft?.photoUrl || null);
+  const [photoUrl, setPhotoUrl] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -154,7 +179,8 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
   const [saved, setSaved] = useState(false);
   const [savedWords, setSavedWords] = useState([]);
   const [savedText, setSavedText] = useState('');
-  const [draftSaved, setDraftSaved] = useState(!!draft?.text);
+  const [savedVocabulary, setSavedVocabulary] = useState([]);
+  const [draftSaved, setDraftSaved] = useState(false);
   const [isFirstRecord, setIsFirstRecord] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [photoAnalysis, setPhotoAnalysis] = useState(null);
@@ -166,7 +192,9 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
   const [proofread, setProofread] = useState(null);
   const [proofreading, setProofreading] = useState(false);
   const fileRef = useRef();
+  const debounceRef = useRef(null);
 
+  // Auto-save draft
   useEffect(() => {
     if (!text && !photoUrl) return;
     saveDraft({ mode, text, photoUrl });
@@ -174,6 +202,21 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
     const timer = setTimeout(() => setDraftSaved(false), 1500);
     return () => clearTimeout(timer);
   }, [text, mode, photoUrl]);
+
+  // Auto-trigger AI suggestions (debounced) — not in article mode
+  useEffect(() => {
+    if (mode === 'article') return;
+    if (text.length < 5) {
+      setSuggestions([]);
+      setSelected(null);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      handleSuggest();
+    }, 1500);
+    return () => clearTimeout(debounceRef.current);
+  }, [text, mode]);
 
   const handlePhoto = (e) => {
     const file = e.target.files[0];
@@ -228,7 +271,7 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
       let result;
       if (!hasKey) {
         await new Promise(r => setTimeout(r, 800));
-        result = DEMO_SUGGESTIONS[mode];
+        result = DEMO_SUGGESTIONS[mode] || DEMO_SUGGESTIONS.korean;
         setError('데모 모드예요. 설정에서 Gemini API 키를 입력하면 나만의 문장을 만들 수 있어요! ⚙️');
       } else {
         result = await getSuggestions(text, mode);
@@ -240,7 +283,7 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
       } else {
         setError(`오류: ${e.message}`);
       }
-      setSuggestions(DEMO_SUGGESTIONS[mode]);
+      setSuggestions(DEMO_SUGGESTIONS[mode] || DEMO_SUGGESTIONS.korean);
     } finally {
       setLoading(false);
     }
@@ -249,12 +292,16 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
   const handleSave = () => {
     const existingRecords = loadRecords();
     const isFirst = existingRecords.length === 0;
-    const englishText = selected || suggestions[0] || text;
-    const words = englishText.match(/\b[a-zA-Z]{4,}\b/g)?.slice(0, 5) || [];
-    saveRecord({ mood: 'sunny', photoUrl, koreanText: mode === 'korean' ? text : '', englishText, words });
+    const englishText = (selected?.english || selected?.improved) || (suggestions[0]?.english || suggestions[0]?.improved) || text;
+    const vocabItems = selected?.vocabulary || suggestions[0]?.vocabulary || [];
+    const words = vocabItems.map(v => v.word).filter(Boolean).slice(0, 5);
+    const fallbackWords = englishText.match(/\b[a-zA-Z]{4,}\b/g)?.slice(0, 5) || [];
+    const finalWords = words.length > 0 ? words : fallbackWords;
+    saveRecord({ mood: 'sunny', photoUrl, koreanText: mode === 'korean' ? text : '', englishText, words: finalWords });
     clearDraft();
-    setSavedWords(words);
+    setSavedWords(finalWords);
     setSavedText(englishText);
+    setSavedVocabulary(vocabItems);
     setIsFirstRecord(isFirst);
     setSaved(true);
   };
@@ -289,27 +336,37 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
     setSaved(false);
     setSavedWords([]);
     setSavedText('');
+    setSavedVocabulary([]);
     setDraftSaved(false);
     setIsFirstRecord(false);
+  };
+
+  const handleRestoreDraft = () => {
+    const d = loadDraft();
+    if (d) {
+      setText(d.text || '');
+      setMode(d.mode || 'korean');
+    }
+    setShowDraftBanner(false);
+  };
+
+  const handleNewRecord = () => {
+    clearDraft();
+    setText('');
+    setMode('korean');
+    setShowDraftBanner(false);
   };
 
   if (saved) {
     return (
       <div className="tab-content px-4 pt-6 pb-24 space-y-4">
-        {isFirstRecord ? (
-          <div className="text-center py-6 slide-up">
-            <div className="text-6xl mb-3">🌱</div>
-            <p className="text-[#3a3530] text-2xl font-bold">첫 번째 보물 발견!</p>
-            <p className="text-[#6aaa3a] text-sm mt-2">숲에서 첫 발걸음을 내딛었어요</p>
-            <p className="text-[#b0a898] text-xs mt-1">앞으로 매일 조금씩 채워가요 🌿</p>
-          </div>
-        ) : (
-          <div className="text-center py-4">
-            <div className="text-4xl mb-2">🌿</div>
-            <p className="text-[#3a3530] text-xl font-bold">기록 완료!</p>
-            <p className="text-[#7a7268] text-sm mt-1">오늘의 순간이 기록됐어요</p>
-          </div>
-        )}
+        <div className="text-center py-4 slide-up">
+          <div className="text-5xl mb-2">🌿</div>
+          <p className="text-[#3a3530] text-xl font-bold">오늘의 보물을 발견했어요!</p>
+          {isFirstRecord && (
+            <p className="text-[#6aaa3a] text-sm mt-1">첫 번째 발걸음을 내딛었어요 🌱</p>
+          )}
+        </div>
 
         {savedText && (
           <div className="p-4 rounded-2xl" style={{ background: '#edf5e4', border: '1.5px solid #c8e8a0' }}>
@@ -317,7 +374,21 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
           </div>
         )}
 
-        {savedWords.length > 0 && (
+        {savedVocabulary.length > 0 && (
+          <div>
+            <p className="text-[#9a9088] text-xs font-semibold mb-2">오늘 배운 단어</p>
+            <div className="flex flex-wrap gap-2">
+              {savedVocabulary.map((v, i) => (
+                <span key={i} className="px-3 py-1 rounded-full text-xs font-medium"
+                  style={{ background: '#edf5e4', color: '#4a8a20', border: '1px solid #c8e8a0' }}>
+                  {v.word} <span style={{ color: '#7a9a60' }}>· {v.meaning}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {savedVocabulary.length === 0 && savedWords.length > 0 && (
           <div>
             <p className="text-[#9a9088] text-xs font-semibold mb-2">오늘 사용한 단어</p>
             <div className="flex flex-wrap gap-2">
@@ -331,17 +402,29 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
           </div>
         )}
 
+        <div className="p-3 rounded-2xl text-center"
+          style={{ background: '#fffbf0', border: '1px solid #e8d880' }}>
+          <p className="text-[#a07820] text-xs">💡 오늘 배운 표현을 내일 대화에서 써보세요!</p>
+        </div>
+
         <button onClick={handleShare} disabled={sharing}
           className="w-full py-4 rounded-2xl font-semibold text-sm active:scale-95 transition-all flex items-center justify-center gap-2"
           style={{ background: '#ffffff', color: '#3a3530', border: '1px solid #e0dbd2', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
           {sharing ? '⏳ 준비 중...' : '📤 카카오톡에 공유하기'}
         </button>
 
-        <button onClick={handleReset}
-          className="w-full py-4 rounded-2xl font-semibold text-sm active:scale-95 transition-all"
-          style={{ background: '#edf5e4', color: '#4a8a20', border: '1.5px solid #c8e8a0' }}>
-          새 기록 남기기
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => onNavigate?.('home')}
+            className="flex-1 py-4 rounded-2xl font-semibold text-sm active:scale-95 transition-all"
+            style={{ background: '#f8f6f2', color: '#7a7268', border: '1px solid #e0dbd2' }}>
+            🏠 홈으로
+          </button>
+          <button onClick={handleReset}
+            className="flex-1 py-4 rounded-2xl font-semibold text-sm active:scale-95 transition-all"
+            style={{ background: '#edf5e4', color: '#4a8a20', border: '1.5px solid #c8e8a0' }}>
+            계속 기록하기
+          </button>
+        </div>
       </div>
     );
   }
@@ -353,10 +436,27 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
         {draftSaved && (
           <span className="text-[#6aaa3a] text-xs fade-in">✓ 임시저장됨</span>
         )}
-        {!draftSaved && draft?.text && text && (
-          <span className="text-[#b0a898] text-xs">임시저장 불러옴</span>
-        )}
       </div>
+
+      {/* Draft restore banner */}
+      {showDraftBanner && (
+        <div className="p-3 rounded-2xl slide-up"
+          style={{ background: '#fffbf0', border: '1.5px solid #e8d880' }}>
+          <p className="text-[#7a5a20] text-sm font-medium mb-2">이전에 쓰던 기록이 있어요. 이어서 쓸까요?</p>
+          <div className="flex gap-2">
+            <button onClick={handleRestoreDraft}
+              className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95"
+              style={{ background: '#f5e070', color: '#6a4a10', border: '1px solid #d8c040' }}>
+              이어쓰기
+            </button>
+            <button onClick={handleNewRecord}
+              className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95"
+              style={{ background: '#f8f6f2', color: '#9a9088', border: '1px solid #e0dbd2' }}>
+              새로 쓰기
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Mode Toggle */}
       <div className="flex rounded-2xl overflow-hidden"
@@ -597,53 +697,85 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
 
       {error && <p className="text-[#c08030] text-xs text-center">{error}</p>}
 
+      {/* AI 로딩 인디케이터 */}
+      {mode !== 'article' && loading && text.length >= 5 && (
+        <div className="flex items-center gap-2 px-1 fade-in">
+          <span className="text-[#6aaa3a] text-sm">🌿</span>
+          <p className="text-[#6aaa3a] text-sm">표현을 찾고 있어요<span className="animate-pulse">...</span></p>
+        </div>
+      )}
+
+      {/* AI 제안 버블 */}
       {mode !== 'article' && suggestions.length > 0 && (
         <div className="space-y-2 slide-up">
           <p className="text-[#9a9088] text-xs font-semibold">
             {mode === 'korean' ? '이렇게 영어로 표현할 수 있어요!' : '더 자연스러운 표현이에요!'}
           </p>
-          {suggestions.map((s, i) => (
-            <button key={i} onClick={() => setSelected(s === selected ? null : s)}
-              className="w-full text-left p-4 rounded-2xl text-sm transition-all active:scale-95"
-              style={{
-                background: selected === s ? '#edf5e4' : '#ffffff',
-                border: selected === s ? '2px solid #6aaa3a' : '1px solid #e0dbd2',
-                color: '#3a3530',
-                boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-              }}>
-              <span className="text-[#6aaa3a] mr-2 font-bold">{i + 1}.</span> {s}
-              {selected === s && <span className="ml-2 text-[#6aaa3a]">✓</span>}
-            </button>
-          ))}
+          {suggestions.map((s, i) => {
+            const isSelected = selected === s;
+            const mainText = s.english || s.improved || '';
+            const vocabItems = s.vocabulary || [];
+            const changes = s.changes || [];
+            return (
+              <button key={i} onClick={() => setSelected(isSelected ? null : s)}
+                className="w-full text-left p-4 rounded-2xl text-sm transition-all active:scale-95 space-y-2"
+                style={{
+                  background: isSelected ? '#edf5e4' : '#ffffff',
+                  border: isSelected ? '2px solid #6aaa3a' : '1px solid #e0dbd2',
+                  color: '#3a3530',
+                  boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+                }}>
+                <div className="flex items-start justify-between gap-2">
+                  <span className="leading-relaxed font-medium flex-1">
+                    <span className="text-[#6aaa3a] mr-1.5 font-bold">{i + 1}.</span>{mainText}
+                  </span>
+                  {isSelected && <span className="text-[#6aaa3a] text-base shrink-0">✓</span>}
+                </div>
+                {s.korean_translation && (
+                  <p className="text-[#7a8a70] text-xs leading-relaxed pl-4">
+                    🇰🇷 {s.korean_translation}
+                  </p>
+                )}
+                {vocabItems.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pl-4">
+                    {vocabItems.map((v, j) => (
+                      <span key={j} className="px-2 py-0.5 rounded-full text-[11px]"
+                        style={{ background: isSelected ? '#d4edc4' : '#f0ece4', color: '#5a7a40' }}>
+                        {v.word} · {v.meaning}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {changes.length > 0 && (
+                  <div className="space-y-0.5 pl-4">
+                    {changes.map((c, j) => (
+                      <p key={j} className="text-[11px] text-[#9a8878]">
+                        <span className="line-through text-[#c09088]">{c.original}</span>
+                        {' → '}
+                        <span className="text-[#5a8a40] font-medium">{c.improved}</span>
+                        {c.reason_korean && <span className="text-[#b0a898]"> · {c.reason_korean}</span>}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 
-      {mode !== 'article' && <div className="flex gap-2">
-        <button
-          onClick={handleSuggest}
-          disabled={text.length < 5 || loading}
-          className="py-4 rounded-2xl font-semibold text-sm transition-all active:scale-95"
-          style={{
-            flex: '0 0 auto',
-            paddingLeft: 16,
-            paddingRight: 16,
-            background: text.length >= 5 ? '#f0ece4' : '#f8f6f2',
-            color: text.length >= 5 ? '#7a7268' : '#c0b8b0',
-            border: '1px solid #e0dbd2',
-          }}>
-          {loading ? '⏳' : '✨ AI'}
-        </button>
+      {mode !== 'article' && (
         <button
           onClick={handleSave}
           disabled={text.length < 2}
-          className="flex-1 py-4 rounded-2xl font-bold text-sm transition-all active:scale-95"
+          className="w-full py-4 rounded-2xl font-bold text-sm transition-all active:scale-95"
           style={{
             background: text.length >= 2 ? '#c84040' : '#f0ece4',
             color: text.length >= 2 ? 'white' : '#c0b8b0',
           }}>
           기록 저장하기 🌿
         </button>
-      </div>}
+      )}
     </div>
   );
 }

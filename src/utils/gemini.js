@@ -46,20 +46,49 @@ async function callGemini(contents, retries = 3) {
 // 텍스트 기반 영어 문장 제안
 export async function getSuggestions(text, mode) {
   const prompt = mode === 'korean'
-    ? `You are a friendly English learning assistant. The user is a Korean speaker learning English through daily life journaling. Given their Korean text, suggest 3 natural English sentences. Return JSON only: {"suggestions": ["...", "...", "..."]}. Keep it warm, natural, not textbook-like.\n\nKorean text: ${text}`
-    : `You are a friendly English learning assistant. The user wrote an English sentence. Suggest 3 more natural versions. Return JSON only: {"suggestions": ["...", "...", "..."]}. Be encouraging, not corrective in tone.\n\nEnglish text: ${text}`;
+    ? `You are a friendly English learning assistant. The user is a Korean speaker learning English through daily life journaling. Given their Korean text, suggest 3 natural English sentences with Korean translations and vocabulary.
+
+Return JSON only:
+{
+  "suggestions": [
+    {
+      "english": "natural English sentence",
+      "korean_translation": "한국어 번역",
+      "vocabulary": [{"word": "word", "meaning": "뜻"}]
+    }
+  ]
+}
+
+Keep it warm, natural, not textbook-like. Include 2-3 vocabulary items per suggestion from words used in the sentence.
+
+Korean text: ${text}`
+    : `You are a friendly English learning assistant. The user wrote an English sentence. Suggest 3 more natural improved versions with Korean translations and explanations of changes.
+
+Return JSON only:
+{
+  "suggestions": [
+    {
+      "improved": "improved sentence",
+      "korean_translation": "한국어 번역",
+      "changes": [{"original": "original word/phrase", "improved": "improved word/phrase", "reason_korean": "변경 이유"}]
+    }
+  ]
+}
+
+Be encouraging, not corrective in tone. Include 1-2 change explanations per suggestion.
+
+English text: ${text}`;
 
   const raw = await callGemini([{ parts: [{ text: prompt }] }]);
   const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
   try {
     const parsed = JSON.parse(cleaned);
-    if (Array.isArray(parsed)) return parsed;
     if (parsed.suggestions) return parsed.suggestions;
   } catch {}
-  const match = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+  const match = cleaned.match(/\{[\s\S]*\}/);
   if (!match) throw new Error('AI 응답 형식 오류. 다시 시도해주세요.');
   const parsed = JSON.parse(match[0]);
-  return Array.isArray(parsed) ? parsed : parsed.suggestions;
+  return parsed.suggestions;
 }
 
 // 사진 분석 — 관련 영어 단어 + 예문 제안

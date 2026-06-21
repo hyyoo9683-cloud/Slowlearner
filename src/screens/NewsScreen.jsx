@@ -42,6 +42,26 @@ const CATEGORY_EMOJI = {
   '세계': '🌍', '기술': '💡', '환경': '🌱', '경제': '📈', '문화': '🎨',
 };
 
+function WordChip({ word }) {
+  const [showMeaning, setShowMeaning] = useState(false);
+  const isObject = typeof word === 'object' && word !== null;
+  const label = isObject ? word.english || word.word || String(word) : String(word);
+  const meaning = isObject ? (word.korean || word.meaning || '') : '';
+
+  return (
+    <button
+      onClick={() => meaning && setShowMeaning(v => !v)}
+      className="px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-95"
+      style={{
+        background: showMeaning ? '#edf5e4' : '#f0ece4',
+        color: showMeaning ? '#4a8a20' : '#7a7268',
+        border: showMeaning ? '1px solid #c8e8a0' : '1px solid #e0dbd2',
+      }}>
+      {label}{showMeaning && meaning ? <span className="text-[#6aaa3a] ml-1">· {meaning}</span> : null}
+    </button>
+  );
+}
+
 export default function NewsScreen({ onNavigate }) {
   const [expanded, setExpanded] = useState(null);
   const [news, setNews] = useState(FALLBACK_NEWS);
@@ -402,19 +422,19 @@ export default function NewsScreen({ onNavigate }) {
                   </p>
                 ))}
               </div>
-              {n.words.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {n.words.map((w, j) => (
-                    <span key={j} className="px-2.5 py-1 rounded-full text-xs font-medium"
-                      style={{ background: '#edf5e4', color: '#4a8a20', border: '1px solid #c8e8a0' }}>
-                      {w}
-                    </span>
-                  ))}
+              {n.words && n.words.length > 0 && (
+                <div>
+                  <p className="text-[#b0a898] text-[10px] mb-1.5">단어 탭하면 한국어 뜻이 보여요</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {n.words.map((w, j) => (
+                      <WordChip key={j} word={w} />
+                    ))}
+                  </div>
                 </div>
               )}
               <button onClick={() => handleStartWriting(i)}
-                className="w-full py-3 rounded-xl text-xs font-semibold transition-all active:scale-95"
-                style={{ background: '#edf5e4', border: '1px solid #c8e8a0', color: '#4a8a20' }}>
+                className="w-full py-3.5 rounded-xl text-sm font-bold transition-all active:scale-95"
+                style={{ background: '#4a8a20', border: 'none', color: '#ffffff', boxShadow: '0 2px 8px rgba(74,138,32,0.3)' }}>
                 이 뉴스로 내 생각 써보기 ✏️
               </button>
             </div>
@@ -422,11 +442,7 @@ export default function NewsScreen({ onNavigate }) {
         </div>
       ))}
 
-      {!isLive && !loading && (
-        <p className="text-center text-[#c0b8b0] text-xs pt-2">
-          실시간 뉴스는 Vercel 환경변수에 NEWSAPI_KEY 설정 후 이용 가능해요
-        </p>
-      )}
+      {/* NEWSAPI notice removed — sample news shown naturally */}
     </div>
   );
 }

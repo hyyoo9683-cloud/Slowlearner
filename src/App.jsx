@@ -34,7 +34,7 @@ export default function App() {
   const screen = () => {
     switch (tab) {
       case 'home': return <HomeScreen onNavigate={navigate} onFillRecord={handleFillRecord} />;
-      case 'record': return <RecordScreen prefillText={prefillText} onClearPrefill={() => setPrefillText('')} />;
+      case 'record': return <RecordScreen prefillText={prefillText} onClearPrefill={() => setPrefillText('')} onNavigate={navigate} />;
       case 'news': return <NewsScreen onNavigate={navigate} />;
       case 'gallery': return <GalleryScreen onNavigate={navigate} />;
       case 'books': return <BooksScreen />;
