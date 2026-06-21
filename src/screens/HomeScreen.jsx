@@ -12,8 +12,8 @@ const moods = [
 ];
 
 const sampleNews = [
-  { title: 'Arctic Ice Reaches Record Low', ko: '북극 빙하 3년 연속 최저', category: '세계' },
-  { title: 'New AI Tools Help Small Farmers', ko: 'AI가 소농을 돕는다', category: '기술' },
+  { title: 'Arctic Ice Reaches Record Low', ko: '북극 빙하 3년 연속 최저', category: '세계', summary: '올해 북극 해빙 면적이 역대 최저치를 기록했어요. 기후 전문가들은 이 추세가 계속될 것으로 우려하고 있어요.' },
+  { title: 'New AI Tools Help Small Farmers', ko: 'AI가 소농을 돕는다', category: '기술', summary: '저렴한 AI 농업 앱이 소규모 농부들의 작물 관리를 돕고 있어요. 수확량이 최대 30% 늘었다고 해요.' },
 ];
 
 export default function HomeScreen({ onNavigate, onFillRecord }) {
@@ -27,7 +27,7 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
       <div className="relative">
         <ForestBackground mood={mood} />
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 float-anim">
-          <RedHoodCharacter size={90} />
+          <RedHoodCharacter size={135} mood={mood} />
         </div>
       </div>
 
@@ -85,7 +85,8 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
                 className="w-full text-left p-3 rounded-2xl transition-all active:scale-95"
                 style={{ background: '#f8f6f2', border: '1px solid #ede9e2' }}>
                 <p className="text-[#3a3530] text-sm font-semibold leading-tight">{n.title}</p>
-                <p className="text-[#9a9088] text-xs mt-0.5">{n.ko} · 3줄 요약 보기</p>
+                <p className="text-[#6aaa3a] text-xs mt-0.5 font-medium">{n.ko}</p>
+                <p className="text-[#9a9088] text-xs mt-1 leading-snug">{n.summary}</p>
               </button>
             ))}
           </div>
