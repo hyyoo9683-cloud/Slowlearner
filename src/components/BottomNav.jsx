@@ -3,7 +3,7 @@ const tabs = [
   { id: 'record', label: '기록', icon: '✏️' },
   { id: 'news', label: '뉴스', icon: '📰' },
   { id: 'gallery', label: '갤러리', icon: '🖼️' },
-  { id: 'books', label: '책', icon: '📚' },
+  { id: 'books', label: '미디어', icon: '🎧' },
 ];
 
 export default function BottomNav({ active, onSelect }) {
