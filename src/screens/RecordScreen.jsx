@@ -223,7 +223,7 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
   const dragRef = useRef(null); // { mode: 'move'|'resize', startX, startY, boxX, boxY, boxSize }
   // imgRect: 컨테이너 안에서 이미지가 실제 렌더되는 영역 (px)
   const [imgRect, setImgRect] = useState(null);
-  // cropBox: imgRect 기준 px
+  // cropBox: { x, y, w, h } — imgRect 기준 px, 자유 비율
   const [cropBox, setCropBox] = useState(null);
 
   const initImgRect = () => {
@@ -239,8 +239,8 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
     const ry = (ch - rh) / 2;
     const rect = { x: rx, y: ry, w: rw, h: rh };
     setImgRect(rect);
-    const size = Math.min(rw, rh) * 0.8;
-    setCropBox({ x: rx + (rw - size) / 2, y: ry + (rh - size) / 2, size });
+    // 초기값: 이미지 전체
+    setCropBox({ x: rx, y: ry, w: rw, h: rh });
   };
 
   const getPoint = (e) => {
@@ -250,11 +250,12 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
     return { x: pt.clientX - cr.left, y: pt.clientY - cr.top };
   };
 
-  const handleCropPointerDown = (e, mode) => {
+  // corner: 'tl'|'tr'|'bl'|'br' or null(=move)
+  const handleCropPointerDown = (e, corner) => {
     e.stopPropagation();
     e.preventDefault();
     const pt = getPoint(e);
-    dragRef.current = { mode, startX: pt.x, startY: pt.y, boxX: cropBox.x, boxY: cropBox.y, boxSize: cropBox.size };
+    dragRef.current = { corner, startX: pt.x, startY: pt.y, box: { ...cropBox } };
   };
 
   const handleCropPointerMove = (e) => {
@@ -264,34 +265,52 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
     const pt = getPoint(e);
     const dx = pt.x - dragRef.current.startX;
     const dy = pt.y - dragRef.current.startY;
-    const { mode, boxX, boxY, boxSize } = dragRef.current;
-    if (mode === 'move') {
-      const nx = Math.max(imgRect.x, Math.min(imgRect.x + imgRect.w - boxSize, boxX + dx));
-      const ny = Math.max(imgRect.y, Math.min(imgRect.y + imgRect.h - boxSize, boxY + dy));
+    const { corner, box } = dragRef.current;
+    const ir = imgRect;
+    const MIN = 30;
+
+    if (!corner) {
+      // 이동
+      const nx = Math.max(ir.x, Math.min(ir.x + ir.w - box.w, box.x + dx));
+      const ny = Math.max(ir.y, Math.min(ir.y + ir.h - box.h, box.y + dy));
       setCropBox(b => ({ ...b, x: nx, y: ny }));
     } else {
-      const d = Math.max(dx, dy);
-      const newSize = Math.max(40, Math.min(
-        imgRect.x + imgRect.w - boxX,
-        imgRect.y + imgRect.h - boxY,
-        boxSize + d
-      ));
-      setCropBox(b => ({ ...b, size: newSize }));
+      let { x, y, w, h } = box;
+      if (corner === 'tl') {
+        const nx = Math.max(ir.x, Math.min(x + w - MIN, x + dx));
+        const ny = Math.max(ir.y, Math.min(y + h - MIN, y + dy));
+        setCropBox({ x: nx, y: ny, w: x + w - nx, h: y + h - ny });
+      } else if (corner === 'tr') {
+        const nw = Math.max(MIN, Math.min(ir.x + ir.w - x, w + dx));
+        const ny = Math.max(ir.y, Math.min(y + h - MIN, y + dy));
+        setCropBox({ x, y: ny, w: nw, h: y + h - ny });
+      } else if (corner === 'bl') {
+        const nx = Math.max(ir.x, Math.min(x + w - MIN, x + dx));
+        const nh = Math.max(MIN, Math.min(ir.y + ir.h - y, h + dy));
+        setCropBox({ x: nx, y, w: x + w - nx, h: nh });
+      } else if (corner === 'br') {
+        const nw = Math.max(MIN, Math.min(ir.x + ir.w - x, w + dx));
+        const nh = Math.max(MIN, Math.min(ir.y + ir.h - y, h + dy));
+        setCropBox({ x, y, w: nw, h: nh });
+      }
     }
   };
 
   const confirmCrop = () => {
     const img = cropImgRef.current;
     if (!img || !imgRect || !cropBox) return;
-    const scale = img.naturalWidth / imgRect.w;
-    const sx = (cropBox.x - imgRect.x) * scale;
-    const sy = (cropBox.y - imgRect.y) * scale;
-    const ss = cropBox.size * scale;
-    const out = Math.min(ss, 1200);
+    const scaleX = img.naturalWidth / imgRect.w;
+    const scaleY = img.naturalHeight / imgRect.h;
+    const sx = (cropBox.x - imgRect.x) * scaleX;
+    const sy = (cropBox.y - imgRect.y) * scaleY;
+    const sw = cropBox.w * scaleX;
+    const sh = cropBox.h * scaleY;
+    const maxOut = 1200;
+    const ratio = Math.min(maxOut / sw, maxOut / sh, 1);
     const canvas = document.createElement('canvas');
-    canvas.width = out;
-    canvas.height = out;
-    canvas.getContext('2d').drawImage(img, sx, sy, ss, ss, 0, 0, out, out);
+    canvas.width = Math.round(sw * ratio);
+    canvas.height = Math.round(sh * ratio);
+    canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
     handleCropDone(canvas.toDataURL('image/jpeg', 0.9));
   };
 
@@ -564,7 +583,7 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
                 <defs>
                   <mask id="cm">
                     <rect width="100%" height="100%" fill="white" />
-                    <rect x={cropBox.x} y={cropBox.y} width={cropBox.size} height={cropBox.size} fill="black" />
+                    <rect x={cropBox.x} y={cropBox.y} width={cropBox.w} height={cropBox.h} fill="black" />
                   </mask>
                 </defs>
                 <rect width="100%" height="100%" fill="rgba(0,0,0,0.6)" mask="url(#cm)" />
@@ -572,18 +591,18 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
               {/* 크롭 박스 — 이동 */}
               <div
                 className="absolute border-2 border-white"
-                style={{ left: cropBox.x, top: cropBox.y, width: cropBox.size, height: cropBox.size, cursor: 'move', boxSizing: 'border-box' }}
-                onMouseDown={e => handleCropPointerDown(e, 'move')}
-                onTouchStart={e => handleCropPointerDown(e, 'move')}
+                style={{ left: cropBox.x, top: cropBox.y, width: cropBox.w, height: cropBox.h, cursor: 'move', boxSizing: 'border-box' }}
+                onMouseDown={e => handleCropPointerDown(e, null)}
+                onTouchStart={e => handleCropPointerDown(e, null)}
               >
                 {[1,2].map(n => <div key={`v${n}`} className="absolute top-0 bottom-0" style={{ left:`${n*33.3}%`, width:1, background:'rgba(255,255,255,0.35)' }} />)}
                 {[1,2].map(n => <div key={`h${n}`} className="absolute left-0 right-0" style={{ top:`${n*33.3}%`, height:1, background:'rgba(255,255,255,0.35)' }} />)}
-                {/* 모서리 핸들 (크기 조절) */}
-                {[['0%','0%'],['100%','0%'],['0%','100%'],['100%','100%']].map(([l,t],i) => (
-                  <div key={i} className="absolute w-5 h-5 bg-white rounded-sm"
+                {/* 네 모서리 핸들 */}
+                {[['tl','0%','0%'],['tr','100%','0%'],['bl','0%','100%'],['br','100%','100%']].map(([c,l,t]) => (
+                  <div key={c} className="absolute w-6 h-6 bg-white rounded-sm"
                     style={{ left:l, top:t, transform:'translate(-50%,-50%)', touchAction:'none' }}
-                    onMouseDown={e => { e.stopPropagation(); handleCropPointerDown(e, 'resize'); }}
-                    onTouchStart={e => { e.stopPropagation(); handleCropPointerDown(e, 'resize'); }}
+                    onMouseDown={e => { e.stopPropagation(); handleCropPointerDown(e, c); }}
+                    onTouchStart={e => { e.stopPropagation(); handleCropPointerDown(e, c); }}
                   />
                 ))}
               </div>
