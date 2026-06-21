@@ -220,62 +220,78 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
 
   const cropImgRef = useRef(null);
   const cropContainerRef = useRef(null);
-  const dragRef = useRef(null);
-  // cropBox: 0~1 비율로 관리 (컨테이너 기준)
-  const [cropBox, setCropBox] = useState({ x: 0.1, y: 0.1, size: 0.8 });
+  const dragRef = useRef(null); // { mode: 'move'|'resize', startX, startY, boxX, boxY, boxSize }
+  // imgRect: 컨테이너 안에서 이미지가 실제 렌더되는 영역 (px)
+  const [imgRect, setImgRect] = useState(null);
+  // cropBox: imgRect 기준 px
+  const [cropBox, setCropBox] = useState(null);
 
-  const getCropContainerSize = () => {
-    const el = cropContainerRef.current;
-    if (!el) return { w: 300, h: 300 };
-    return { w: el.offsetWidth, h: el.offsetHeight };
+  const initImgRect = () => {
+    const img = cropImgRef.current;
+    const con = cropContainerRef.current;
+    if (!img || !con) return;
+    const cw = con.offsetWidth;
+    const ch = con.offsetHeight;
+    const scale = Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
+    const rw = img.naturalWidth * scale;
+    const rh = img.naturalHeight * scale;
+    const rx = (cw - rw) / 2;
+    const ry = (ch - rh) / 2;
+    const rect = { x: rx, y: ry, w: rw, h: rh };
+    setImgRect(rect);
+    const size = Math.min(rw, rh) * 0.8;
+    setCropBox({ x: rx + (rw - size) / 2, y: ry + (rh - size) / 2, size });
   };
 
-  const handleCropPointerDown = (e) => {
-    e.preventDefault();
+  const getPoint = (e) => {
     const pt = e.touches ? e.touches[0] : e;
-    const { w, h } = getCropContainerSize();
-    dragRef.current = {
-      startX: pt.clientX,
-      startY: pt.clientY,
-      boxX: cropBox.x * w,
-      boxY: cropBox.y * h,
-    };
+    const con = cropContainerRef.current;
+    const cr = con.getBoundingClientRect();
+    return { x: pt.clientX - cr.left, y: pt.clientY - cr.top };
+  };
+
+  const handleCropPointerDown = (e, mode) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const pt = getPoint(e);
+    dragRef.current = { mode, startX: pt.x, startY: pt.y, boxX: cropBox.x, boxY: cropBox.y, boxSize: cropBox.size };
   };
 
   const handleCropPointerMove = (e) => {
-    if (!dragRef.current) return;
-    const pt = e.touches ? e.touches[0] : e;
-    const { w, h } = getCropContainerSize();
-    const dx = pt.clientX - dragRef.current.startX;
-    const dy = pt.clientY - dragRef.current.startY;
-    const sizePx = cropBox.size * Math.min(w, h);
-    const newXpx = Math.max(0, Math.min(w - sizePx, dragRef.current.boxX + dx));
-    const newYpx = Math.max(0, Math.min(h - sizePx, dragRef.current.boxY + dy));
-    setCropBox(b => ({ ...b, x: newXpx / w, y: newYpx / h }));
+    e.stopPropagation();
+    e.preventDefault();
+    if (!dragRef.current || !imgRect) return;
+    const pt = getPoint(e);
+    const dx = pt.x - dragRef.current.startX;
+    const dy = pt.y - dragRef.current.startY;
+    const { mode, boxX, boxY, boxSize } = dragRef.current;
+    if (mode === 'move') {
+      const nx = Math.max(imgRect.x, Math.min(imgRect.x + imgRect.w - boxSize, boxX + dx));
+      const ny = Math.max(imgRect.y, Math.min(imgRect.y + imgRect.h - boxSize, boxY + dy));
+      setCropBox(b => ({ ...b, x: nx, y: ny }));
+    } else {
+      const d = Math.max(dx, dy);
+      const newSize = Math.max(40, Math.min(
+        imgRect.x + imgRect.w - boxX,
+        imgRect.y + imgRect.h - boxY,
+        boxSize + d
+      ));
+      setCropBox(b => ({ ...b, size: newSize }));
+    }
   };
 
   const confirmCrop = () => {
     const img = cropImgRef.current;
-    if (!img) return;
-    const { w, h } = getCropContainerSize();
-    const sizePx = cropBox.size * Math.min(w, h);
-    // 이미지가 컨테이너에 object-cover로 표시되므로 실제 렌더 영역 계산
-    const scaleX = img.naturalWidth / w;
-    const scaleY = img.naturalHeight / h;
-    const scale = Math.max(scaleX, scaleY); // cover는 큰 쪽 기준
-    // 이미지 중앙 정렬 오프셋
-    const renderedW = img.naturalWidth / scale;
-    const renderedH = img.naturalHeight / scale;
-    const imgOffX = (w - renderedW) / 2;
-    const imgOffY = (h - renderedH) / 2;
-    const cx = (cropBox.x * w - imgOffX) * scale;
-    const cy = (cropBox.y * h - imgOffY) * scale;
-    const cs = sizePx * scale;
+    if (!img || !imgRect || !cropBox) return;
+    const scale = img.naturalWidth / imgRect.w;
+    const sx = (cropBox.x - imgRect.x) * scale;
+    const sy = (cropBox.y - imgRect.y) * scale;
+    const ss = cropBox.size * scale;
+    const out = Math.min(ss, 1200);
     const canvas = document.createElement('canvas');
-    const out = Math.min(cs, 1200);
     canvas.width = out;
     canvas.height = out;
-    canvas.getContext('2d').drawImage(img, cx, cy, cs, cs, 0, 0, out, out);
+    canvas.getContext('2d').drawImage(img, sx, sy, ss, ss, 0, 0, out, out);
     handleCropDone(canvas.toDataURL('image/jpeg', 0.9));
   };
 
@@ -515,11 +531,10 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
   }
 
   if (cropSrc) {
-    const sizeFrac = cropBox.size;
     return (
       <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#000' }}>
         <div className="flex items-center justify-between px-4 py-3" style={{ background: '#111' }}>
-          <button onClick={() => setCropSrc(null)} className="text-white text-sm">취소</button>
+          <button onClick={() => { setCropSrc(null); setImgRect(null); setCropBox(null); }} className="text-white text-sm">취소</button>
           <p className="text-white text-sm font-semibold">사진 크롭</p>
           <button onClick={confirmCrop} className="text-[#6aaa3a] text-sm font-bold">완료</button>
         </div>
@@ -527,59 +542,55 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
           ref={cropContainerRef}
           className="flex-1 relative overflow-hidden"
           style={{ touchAction: 'none' }}
-          onMouseMove={e => { e.stopPropagation(); handleCropPointerMove(e); }}
-          onMouseUp={e => { e.stopPropagation(); dragRef.current = null; }}
-          onTouchStart={e => e.stopPropagation()}
-          onTouchMove={e => { e.stopPropagation(); e.preventDefault(); handleCropPointerMove(e); }}
-          onTouchEnd={e => { e.stopPropagation(); dragRef.current = null; }}
+          onMouseMove={handleCropPointerMove}
+          onMouseUp={() => { dragRef.current = null; }}
+          onTouchMove={handleCropPointerMove}
+          onTouchEnd={() => { dragRef.current = null; }}
         >
+          {/* 원본 이미지 — contain으로 전체 표시 */}
           <img
             ref={cropImgRef}
             src={cropSrc}
             alt=""
             className="absolute inset-0 w-full h-full select-none"
-            style={{ objectFit: 'cover' }}
+            style={{ objectFit: 'contain' }}
             draggable={false}
+            onLoad={initImgRect}
           />
-          {/* 어두운 오버레이 — 크롭 영역만 투명하게 */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none">
-            <defs>
-              <mask id="cropMask">
-                <rect width="100%" height="100%" fill="white" />
-                <rect
-                  x={`${cropBox.x * 100}%`}
-                  y={`${cropBox.y * 100}%`}
-                  width={`${sizeFrac * 100}%`}
-                  height={`${sizeFrac * 100}%`}
-                  fill="black"
-                />
-              </mask>
-            </defs>
-            <rect width="100%" height="100%" fill="rgba(0,0,0,0.55)" mask="url(#cropMask)" />
-          </svg>
-          {/* 드래그 핸들 */}
-          <div
-            className="absolute border-2 border-white"
-            style={{
-              left: `${cropBox.x * 100}%`,
-              top: `${cropBox.y * 100}%`,
-              width: `${sizeFrac * 100}%`,
-              paddingBottom: `${sizeFrac * 100}%`,
-              cursor: 'move',
-            }}
-            onMouseDown={e => { e.stopPropagation(); handleCropPointerDown(e); }}
-            onTouchStart={e => { e.stopPropagation(); handleCropPointerDown(e); }}
-          >
-            {/* 3분할 가이드선 */}
-            {[1, 2].map(n => (
-              <div key={`v${n}`} className="absolute top-0 bottom-0" style={{ left: `${n * 33.3}%`, width: 1, background: 'rgba(255,255,255,0.4)' }} />
-            ))}
-            {[1, 2].map(n => (
-              <div key={`h${n}`} className="absolute left-0 right-0" style={{ top: `${n * 33.3}%`, height: 1, background: 'rgba(255,255,255,0.4)' }} />
-            ))}
-          </div>
+          {cropBox && imgRect && (
+            <>
+              {/* 어두운 오버레이 — 크롭 영역만 투명 */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: 'visible' }}>
+                <defs>
+                  <mask id="cm">
+                    <rect width="100%" height="100%" fill="white" />
+                    <rect x={cropBox.x} y={cropBox.y} width={cropBox.size} height={cropBox.size} fill="black" />
+                  </mask>
+                </defs>
+                <rect width="100%" height="100%" fill="rgba(0,0,0,0.6)" mask="url(#cm)" />
+              </svg>
+              {/* 크롭 박스 — 이동 */}
+              <div
+                className="absolute border-2 border-white"
+                style={{ left: cropBox.x, top: cropBox.y, width: cropBox.size, height: cropBox.size, cursor: 'move', boxSizing: 'border-box' }}
+                onMouseDown={e => handleCropPointerDown(e, 'move')}
+                onTouchStart={e => handleCropPointerDown(e, 'move')}
+              >
+                {[1,2].map(n => <div key={`v${n}`} className="absolute top-0 bottom-0" style={{ left:`${n*33.3}%`, width:1, background:'rgba(255,255,255,0.35)' }} />)}
+                {[1,2].map(n => <div key={`h${n}`} className="absolute left-0 right-0" style={{ top:`${n*33.3}%`, height:1, background:'rgba(255,255,255,0.35)' }} />)}
+                {/* 모서리 핸들 (크기 조절) */}
+                {[['0%','0%'],['100%','0%'],['0%','100%'],['100%','100%']].map(([l,t],i) => (
+                  <div key={i} className="absolute w-5 h-5 bg-white rounded-sm"
+                    style={{ left:l, top:t, transform:'translate(-50%,-50%)', touchAction:'none' }}
+                    onMouseDown={e => { e.stopPropagation(); handleCropPointerDown(e, 'resize'); }}
+                    onTouchStart={e => { e.stopPropagation(); handleCropPointerDown(e, 'resize'); }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
-        <p className="text-center text-[#aaa] text-xs py-3">박스를 드래그해서 원하는 영역을 선택하세요</p>
+        <p className="text-center text-[#aaa] text-xs py-3">박스 이동 · 모서리로 크기 조절</p>
       </div>
     );
   }
