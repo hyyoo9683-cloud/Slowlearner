@@ -66,7 +66,7 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
         <div className="p-4 rounded-3xl space-y-3"
           style={{ background: '#faf8f3', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f0ece4' }}>
           <div>
-            <p className="text-[#3a3530] font-semibold text-base">안녕하세요 👋</p>
+            <p className="text-[#1a3d0a] font-semibold text-base">안녕하세요 👋</p>
             <p className="text-[#9a9088] text-sm">오늘 어떤 순간이 있었나요?</p>
           </div>
           <button
@@ -83,7 +83,7 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
           style={{ background: '#faf8f3', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f0ece4' }}>
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-[#3a3530] text-sm font-bold">오늘의 뉴스</p>
+              <p className="text-[#1a3d0a] text-sm font-bold">오늘의 뉴스</p>
               {(() => { const p = loadOnboarding(); return p?.interests?.length > 0 && <p className="text-[#b0a898] text-[10px]">{p.interests.join(' · ')} 관심사 기준</p>; })()}
             </div>
             <button onClick={() => onNavigate('news')} className="text-[#6aaa3a] text-xs font-medium">더 보기 →</button>
@@ -93,7 +93,7 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
               <button key={i} onClick={() => onNavigate('news')}
                 className="w-full text-left p-3 rounded-2xl transition-all active:scale-95"
                 style={{ background: '#f8f6f2', border: '1px solid #ede9e2' }}>
-                <p className="text-[#3a3530] text-sm font-semibold leading-tight">{n.title}</p>
+                <p className="text-[#1a3d0a] text-sm font-semibold leading-tight">{n.title}</p>
                 <p className="text-[#6aaa3a] text-xs mt-0.5 font-medium">{n.ko}</p>
                 <p className="text-[#9a9088] text-xs mt-1 leading-snug">{n.summary}</p>
               </button>
@@ -108,7 +108,7 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
         <div className="p-4 rounded-3xl"
           style={{ background: '#faf8f3', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f0ece4' }}>
           <div className="flex justify-between items-center mb-3">
-            <p className="text-[#3a3530] text-sm font-bold">지금 읽으면 좋은 책</p>
+            <p className="text-[#1a3d0a] text-sm font-bold">지금 읽으면 좋은 책</p>
             <button onClick={() => onNavigate('books')} className="text-[#6aaa3a] text-xs font-medium">더 보기 →</button>
           </div>
           <button onClick={() => onNavigate('books')}
@@ -116,7 +116,7 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
             style={{ background: '#f8f6f2', border: '1px solid #ede9e2' }}>
             <span className="text-2xl">📖</span>
             <div>
-              <p className="text-[#3a3530] text-sm font-semibold">Braiding Sweetgrass</p>
+              <p className="text-[#1a3d0a] text-sm font-semibold">Braiding Sweetgrass</p>
               <p className="text-[#9a9088] text-xs">자연 관심사 맞춤 · 도전 추천</p>
             </div>
           </button>
@@ -126,7 +126,7 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
         <div className="p-4 rounded-3xl"
           style={{ background: '#faf8f3', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f0ece4' }}>
           <div className="flex justify-between items-center mb-3">
-            <p className="text-[#3a3530] text-sm font-bold">내 기록들</p>
+            <p className="text-[#1a3d0a] text-sm font-bold">내 기록들</p>
             <button onClick={() => onNavigate('gallery')} className="text-[#6aaa3a] text-xs font-medium">모두 보기 →</button>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
