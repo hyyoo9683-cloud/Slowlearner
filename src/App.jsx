@@ -37,7 +37,7 @@ export default function App() {
       case 'record': return <RecordScreen prefillText={prefillText} onClearPrefill={() => setPrefillText('')} onNavigate={navigate} />;
       case 'news': return <NewsScreen onNavigate={navigate} />;
       case 'gallery': return <GalleryScreen onNavigate={navigate} />;
-      case 'books': return <BooksScreen />;
+      case 'books': return <BooksScreen onNavigate={navigate} />;
       case 'settings': return <SettingsScreen />;
       default: return <HomeScreen onNavigate={navigate} />;
     }

@@ -4,7 +4,6 @@ const tabs = [
   { id: 'news', label: '뉴스', icon: '📰' },
   { id: 'gallery', label: '갤러리', icon: '🖼️' },
   { id: 'books', label: '책', icon: '📚' },
-  { id: 'settings', label: '설정', icon: '⚙️' },
 ];
 
 export default function BottomNav({ active, onSelect }) {

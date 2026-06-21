@@ -42,7 +42,7 @@ export default function CultureCard({ onNavigate, onFillRecord }) {
   if (loading) {
     return (
       <div className="p-4 rounded-3xl flex items-center gap-3"
-        style={{ background: '#f0f7e6', border: '1px solid #97c459', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+        style={{ background: '#faf3e8', border: '1px solid #97c459', borderLeft: '3px solid #97c459', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
         <span className="text-xl">🌿</span>
         <p className="text-[#4a6a20] text-sm">오늘의 문화를 가져오는 중...</p>
       </div>
@@ -51,13 +51,13 @@ export default function CultureCard({ onNavigate, onFillRecord }) {
 
   return (
     <div className="rounded-3xl overflow-hidden"
-      style={{ background: '#f0f7e6', border: '1px solid #97c459', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
+      style={{ background: '#faf3e8', border: '1px solid #97c459', borderLeft: '3px solid #97c459', boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
       {/* 헤더 (항상 표시, 탭으로 접기/펼치기) */}
       <button className="w-full px-4 pt-4 pb-3 text-left" onClick={() => setExpanded(e => !e)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold text-white"
-              style={{ background: '#1a3d0a' }}>
+            <span className="text-xs px-2 py-0.5 font-semibold text-white"
+              style={{ background: '#1a3d0a', color: 'white', border: '2px dashed rgba(255,255,255,0.4)', borderRadius: '4px', padding: '2px 8px' }}>
               {data.emoji} {data.category}
             </span>
             <span className="text-[#7aaa40] text-xs">오늘의 문화 한 조각</span>

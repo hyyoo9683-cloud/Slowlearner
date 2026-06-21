@@ -29,6 +29,11 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 float-anim">
           <RedHoodCharacter size={135} mood={mood} />
         </div>
+        <button onClick={() => onNavigate('settings')}
+          className="absolute top-4 right-4 z-20 w-9 h-9 flex items-center justify-center rounded-full"
+          style={{ background: 'rgba(255,255,255,0.85)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+          ⚙️
+        </button>
       </div>
 
       {/* Mood selector */}
@@ -58,7 +63,7 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
 
         {/* Greeting + Record Button */}
         <div className="p-4 rounded-3xl space-y-3"
-          style={{ background: '#ffffff', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f0ece4' }}>
+          style={{ background: '#faf8f3', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f0ece4' }}>
           <div>
             <p className="text-[#3a3530] font-semibold text-base">안녕하세요 👋</p>
             <p className="text-[#9a9088] text-sm">오늘 어떤 순간이 있었나요?</p>
@@ -74,7 +79,7 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
 
         {/* News Preview */}
         <div className="p-4 rounded-3xl space-y-3"
-          style={{ background: '#ffffff', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f0ece4' }}>
+          style={{ background: '#faf8f3', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f0ece4' }}>
           <div className="flex justify-between items-center">
             <p className="text-[#3a3530] text-sm font-bold">오늘의 뉴스</p>
             <button onClick={() => onNavigate('news')} className="text-[#6aaa3a] text-xs font-medium">더 보기 →</button>
@@ -97,7 +102,7 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
 
         {/* Book Preview */}
         <div className="p-4 rounded-3xl"
-          style={{ background: '#ffffff', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f0ece4' }}>
+          style={{ background: '#faf8f3', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f0ece4' }}>
           <div className="flex justify-between items-center mb-3">
             <p className="text-[#3a3530] text-sm font-bold">지금 읽으면 좋은 책</p>
             <button onClick={() => onNavigate('books')} className="text-[#6aaa3a] text-xs font-medium">더 보기 →</button>
@@ -115,7 +120,7 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
 
         {/* My Records Strip */}
         <div className="p-4 rounded-3xl"
-          style={{ background: '#ffffff', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f0ece4' }}>
+          style={{ background: '#faf8f3', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f0ece4' }}>
           <div className="flex justify-between items-center mb-3">
             <p className="text-[#3a3530] text-sm font-bold">내 기록들</p>
             <button onClick={() => onNavigate('gallery')} className="text-[#6aaa3a] text-xs font-medium">모두 보기 →</button>

@@ -44,7 +44,7 @@ export default function SettingsScreen() {
 
       {/* Font Size */}
       <div className="p-4 rounded-2xl space-y-3"
-        style={{ background: '#ffffff', border: '1px solid #ede9e2', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+        style={{ background: '#faf8f3', border: '1px solid #ede9e2', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
         <p className="text-[#7a7268] text-xs font-semibold">글씨 크기</p>
         <div className="flex gap-2">
           {FONT_SIZES.map(f => (
@@ -145,7 +145,7 @@ export default function SettingsScreen() {
       {/* My Profile */}
       {profile && (
         <div className="p-4 rounded-2xl space-y-2"
-          style={{ background: '#ffffff', border: '1px solid #ede9e2' }}>
+          style={{ background: '#faf8f3', border: '1px solid #ede9e2' }}>
           <p className="text-[#7a7268] text-xs font-semibold">내 프로필</p>
           <p className="text-[#9a9088] text-xs">
             관심사: {profile.interests?.join(', ') || '-'} · 수준: {profile.level || '-'}
