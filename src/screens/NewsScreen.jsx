@@ -94,11 +94,13 @@ export default function NewsScreen({ onNavigate }) {
       if (data.articles && data.articles.length > 0) {
         setIsLive(true);
         const rawNews = data.articles.map(a => ({
-          category: '🌍 뉴스',
+          category: `${a.sourceEmoji || '🌍'} ${a.source || '뉴스'}`,
           title: a.title?.replace(/ - .*$/, '') || '',
           koTitle: '번역 중...',
           summary: [a.description || '내용 없음'],
+          enSummary: [],
           words: [],
+          url: a.url,
           raw: a,
           needsSummary: true,
         }));
@@ -432,11 +434,20 @@ export default function NewsScreen({ onNavigate }) {
                   </div>
                 </div>
               )}
-              <button onClick={() => handleStartWriting(i)}
-                className="w-full py-3.5 rounded-xl text-sm font-bold transition-all active:scale-95"
-                style={{ background: '#4a8a20', border: 'none', color: '#ffffff', boxShadow: '0 2px 8px rgba(74,138,32,0.3)' }}>
-                이 뉴스로 내 생각 써보기 ✏️
-              </button>
+              <div className="flex gap-2">
+                {n.url && (
+                  <a href={n.url} target="_blank" rel="noopener noreferrer"
+                    className="flex-shrink-0 py-3.5 px-4 rounded-xl text-sm font-semibold transition-all active:scale-95"
+                    style={{ background: '#f0ece4', color: '#7a7268', border: '1px solid #e0dbd2' }}>
+                    원문 →
+                  </a>
+                )}
+                <button onClick={() => handleStartWriting(i)}
+                  className="flex-1 py-3.5 rounded-xl text-sm font-bold transition-all active:scale-95"
+                  style={{ background: '#4a8a20', border: 'none', color: '#ffffff', boxShadow: '0 2px 8px rgba(74,138,32,0.3)' }}>
+                  내 생각 써보기 ✏️
+                </button>
+              </div>
             </div>
           )}
         </div>
