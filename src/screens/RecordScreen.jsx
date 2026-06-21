@@ -218,44 +218,64 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
     }
   };
 
-  const cropCanvasRef = useRef(null);
   const cropImgRef = useRef(null);
+  const cropContainerRef = useRef(null);
   const dragRef = useRef(null);
-  const [cropBox, setCropBox] = useState({ x: 0, y: 0, size: 0 });
-  const [cropImgSize, setCropImgSize] = useState({ w: 0, h: 0, scale: 1 });
+  // cropBox: 0~1 비율로 관리 (컨테이너 기준)
+  const [cropBox, setCropBox] = useState({ x: 0.1, y: 0.1, size: 0.8 });
 
-  const initCrop = useCallback((img) => {
-    if (!img) return;
-    cropImgRef.current = img;
-    const rect = img.getBoundingClientRect();
-    const minSide = Math.min(rect.width, rect.height);
-    const size = minSide * 0.8;
-    const x = (rect.width - size) / 2;
-    const y = (rect.height - size) / 2;
-    setCropBox({ x, y, size });
-    setCropImgSize({ w: rect.width, h: rect.height, scale: img.naturalWidth / rect.width });
-  }, []);
+  const getCropContainerSize = () => {
+    const el = cropContainerRef.current;
+    if (!el) return { w: 300, h: 300 };
+    return { w: el.offsetWidth, h: el.offsetHeight };
+  };
 
-  const handleCropDrag = (clientX, clientY) => {
-    if (!dragRef.current || !cropImgRef.current) return;
-    const rect = cropImgRef.current.getBoundingClientRect();
-    const dx = clientX - dragRef.current.startX;
-    const dy = clientY - dragRef.current.startY;
-    const { size } = cropBox;
-    const newX = Math.max(0, Math.min(rect.width - size, dragRef.current.boxX + dx));
-    const newY = Math.max(0, Math.min(rect.height - size, dragRef.current.boxY + dy));
-    setCropBox(b => ({ ...b, x: newX, y: newY }));
+  const handleCropPointerDown = (e) => {
+    e.preventDefault();
+    const pt = e.touches ? e.touches[0] : e;
+    const { w, h } = getCropContainerSize();
+    dragRef.current = {
+      startX: pt.clientX,
+      startY: pt.clientY,
+      boxX: cropBox.x * w,
+      boxY: cropBox.y * h,
+    };
+  };
+
+  const handleCropPointerMove = (e) => {
+    if (!dragRef.current) return;
+    const pt = e.touches ? e.touches[0] : e;
+    const { w, h } = getCropContainerSize();
+    const dx = pt.clientX - dragRef.current.startX;
+    const dy = pt.clientY - dragRef.current.startY;
+    const sizePx = cropBox.size * Math.min(w, h);
+    const newXpx = Math.max(0, Math.min(w - sizePx, dragRef.current.boxX + dx));
+    const newYpx = Math.max(0, Math.min(h - sizePx, dragRef.current.boxY + dy));
+    setCropBox(b => ({ ...b, x: newXpx / w, y: newYpx / h }));
   };
 
   const confirmCrop = () => {
     const img = cropImgRef.current;
     if (!img) return;
-    const scale = img.naturalWidth / img.getBoundingClientRect().width;
+    const { w, h } = getCropContainerSize();
+    const sizePx = cropBox.size * Math.min(w, h);
+    // 이미지가 컨테이너에 object-cover로 표시되므로 실제 렌더 영역 계산
+    const scaleX = img.naturalWidth / w;
+    const scaleY = img.naturalHeight / h;
+    const scale = Math.max(scaleX, scaleY); // cover는 큰 쪽 기준
+    // 이미지 중앙 정렬 오프셋
+    const renderedW = img.naturalWidth / scale;
+    const renderedH = img.naturalHeight / scale;
+    const imgOffX = (w - renderedW) / 2;
+    const imgOffY = (h - renderedH) / 2;
+    const cx = (cropBox.x * w - imgOffX) * scale;
+    const cy = (cropBox.y * h - imgOffY) * scale;
+    const cs = sizePx * scale;
     const canvas = document.createElement('canvas');
-    const s = cropBox.size * scale;
-    canvas.width = s;
-    canvas.height = s;
-    canvas.getContext('2d').drawImage(img, cropBox.x * scale, cropBox.y * scale, s, s, 0, 0, s, s);
+    const out = Math.min(cs, 1200);
+    canvas.width = out;
+    canvas.height = out;
+    canvas.getContext('2d').drawImage(img, cx, cy, cs, cs, 0, 0, out, out);
     handleCropDone(canvas.toDataURL('image/jpeg', 0.9));
   };
 
@@ -495,6 +515,7 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
   }
 
   if (cropSrc) {
+    const sizeFrac = cropBox.size;
     return (
       <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#000' }}>
         <div className="flex items-center justify-between px-4 py-3" style={{ background: '#111' }}>
@@ -502,38 +523,60 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
           <p className="text-white text-sm font-semibold">사진 크롭</p>
           <button onClick={confirmCrop} className="text-[#6aaa3a] text-sm font-bold">완료</button>
         </div>
-        <div className="flex-1 relative overflow-hidden flex items-center justify-center"
-          onMouseMove={e => handleCropDrag(e.clientX, e.clientY)}
+        <div
+          ref={cropContainerRef}
+          className="flex-1 relative overflow-hidden"
+          style={{ touchAction: 'none' }}
+          onMouseMove={handleCropPointerMove}
           onMouseUp={() => { dragRef.current = null; }}
-          onTouchMove={e => handleCropDrag(e.touches[0].clientX, e.touches[0].clientY)}
-          onTouchEnd={() => { dragRef.current = null; }}>
+          onTouchMove={handleCropPointerMove}
+          onTouchEnd={() => { dragRef.current = null; }}
+        >
           <img
-            ref={el => el && initCrop(el)}
+            ref={cropImgRef}
             src={cropSrc}
             alt=""
-            className="max-w-full max-h-full object-contain select-none"
+            className="absolute inset-0 w-full h-full select-none"
+            style={{ objectFit: 'cover' }}
             draggable={false}
           />
-          {cropBox.size > 0 && (
-            <div
-              className="absolute border-2 border-white cursor-move"
-              style={{
-                left: cropImgRef.current?.getBoundingClientRect().left - (cropImgRef.current?.parentElement?.getBoundingClientRect().left || 0) + cropBox.x,
-                top: cropImgRef.current?.getBoundingClientRect().top - (cropImgRef.current?.parentElement?.getBoundingClientRect().top || 0) + cropBox.y,
-                width: cropBox.size,
-                height: cropBox.size,
-                boxShadow: '0 0 0 9999px rgba(0,0,0,0.55)',
-              }}
-              onMouseDown={e => { dragRef.current = { startX: e.clientX, startY: e.clientY, boxX: cropBox.x, boxY: cropBox.y }; e.preventDefault(); }}
-              onTouchStart={e => { dragRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, boxX: cropBox.x, boxY: cropBox.y }; }}
-            >
-              <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none">
-                {Array.from({ length: 9 }).map((_, i) => (
-                  <div key={i} style={{ border: '0.5px solid rgba(255,255,255,0.4)' }} />
-                ))}
-              </div>
-            </div>
-          )}
+          {/* 어두운 오버레이 — 크롭 영역만 투명하게 */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            <defs>
+              <mask id="cropMask">
+                <rect width="100%" height="100%" fill="white" />
+                <rect
+                  x={`${cropBox.x * 100}%`}
+                  y={`${cropBox.y * 100}%`}
+                  width={`${sizeFrac * 100}%`}
+                  height={`${sizeFrac * 100}%`}
+                  fill="black"
+                />
+              </mask>
+            </defs>
+            <rect width="100%" height="100%" fill="rgba(0,0,0,0.55)" mask="url(#cropMask)" />
+          </svg>
+          {/* 드래그 핸들 */}
+          <div
+            className="absolute border-2 border-white"
+            style={{
+              left: `${cropBox.x * 100}%`,
+              top: `${cropBox.y * 100}%`,
+              width: `${sizeFrac * 100}%`,
+              paddingBottom: `${sizeFrac * 100}%`,
+              cursor: 'move',
+            }}
+            onMouseDown={handleCropPointerDown}
+            onTouchStart={handleCropPointerDown}
+          >
+            {/* 3분할 가이드선 */}
+            {[1, 2].map(n => (
+              <div key={`v${n}`} className="absolute top-0 bottom-0" style={{ left: `${n * 33.3}%`, width: 1, background: 'rgba(255,255,255,0.4)' }} />
+            ))}
+            {[1, 2].map(n => (
+              <div key={`h${n}`} className="absolute left-0 right-0" style={{ top: `${n * 33.3}%`, height: 1, background: 'rgba(255,255,255,0.4)' }} />
+            ))}
+          </div>
         </div>
         <p className="text-center text-[#aaa] text-xs py-3">박스를 드래그해서 원하는 영역을 선택하세요</p>
       </div>
