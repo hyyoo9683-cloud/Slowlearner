@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { getStoredKey, setStoredKey } from '../utils/gemini';
 import { getFontSize, setFontSize, FONT_SIZES } from '../utils/fontSize';
 import { loadOnboarding } from './OnboardingScreen';
+import PixelCharacterEditor from '../components/PixelCharacterEditor';
 
 export default function SettingsScreen() {
   const [key, setKey] = useState(getStoredKey());
@@ -70,6 +71,12 @@ export default function SettingsScreen() {
           ))}
         </div>
         <p className="text-[#c0b8b0] text-xs text-center">탭하면 앱 전체 글씨가 바뀌어요</p>
+      </div>
+
+      {/* Pixel Character Editor */}
+      <div className="p-4 rounded-2xl"
+        style={{ background: '#faf8f3', border: '1px solid #ede9e2' }}>
+        <PixelCharacterEditor />
       </div>
 
       {/* AI Key Status */}

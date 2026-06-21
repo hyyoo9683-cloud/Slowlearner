@@ -1,4 +1,49 @@
-export default function RedHoodCharacter({ size = 80, mood = 'sunny' }) {
+import { useState, useEffect } from 'react';
+
+const PIXEL_STORAGE_KEY = 'slowrunner_pixel_character';
+const PIXEL_GRID_SIZE = 16;
+
+export default function RedHoodCharacter({ size = 135, mood = 'sunny' }) {
+  const [pixelData, setPixelData] = useState(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(PIXEL_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length === PIXEL_GRID_SIZE * PIXEL_GRID_SIZE) {
+          // Only use pixel data if it has at least one painted cell
+          if (parsed.some(p => p !== null)) {
+            setPixelData(parsed);
+          }
+        }
+      }
+    } catch {}
+  }, []);
+
+  if (pixelData) {
+    const pixelSize = size / PIXEL_GRID_SIZE;
+    return (
+      <svg width={size} height={size} xmlns="http://www.w3.org/2000/svg">
+        {pixelData.map((color, idx) => {
+          if (!color) return null;
+          const row = Math.floor(idx / PIXEL_GRID_SIZE);
+          const col = idx % PIXEL_GRID_SIZE;
+          return (
+            <rect
+              key={idx}
+              x={col * pixelSize}
+              y={row * pixelSize}
+              width={pixelSize - 1}
+              height={pixelSize - 1}
+              fill={color}
+            />
+          );
+        })}
+      </svg>
+    );
+  }
+
   // Eyes based on mood
   const renderEyes = () => {
     if (mood === 'fog') {
