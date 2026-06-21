@@ -125,10 +125,7 @@ export default function NewsScreen({ onNavigate }) {
           needsSummary: true,
         }));
         setNews(rawNews);
-        const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_SLOW_LEARNER_API;
-        if (hasKey) {
-          summarizeAll(rawNews, data.articles);
-        }
+        summarizeAll(rawNews, data.articles);
       }
     } catch {
       // Use fallback
@@ -337,7 +334,6 @@ export default function NewsScreen({ onNavigate }) {
       const resp = await fetch(`/api/fetch-article?url=${encodeURIComponent(urlInput)}`);
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
-      const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_SLOW_LEARNER_API;
       const newItem = {
         category: '🔗 직접 추가',
         title: data.title || urlInput,
@@ -345,21 +341,19 @@ export default function NewsScreen({ onNavigate }) {
         summary: [data.description || data.text?.slice(0, 100) || ''],
         enSummary: [],
         words: [],
-        needsSummary: hasKey,
+        needsSummary: true,
         raw: { title: data.title, description: data.text },
       };
       const updated = [newItem, ...news];
       setNews(updated);
       setUrlInput('');
       setExpanded(0);
-      if (hasKey) {
-        try {
+      try {
           const result = await summarizeNews(data.title, data.text?.slice(0, 500));
           const emoji = CATEGORY_EMOJI[result.category] || '🔗';
           updated[0] = { ...updated[0], category: `${emoji} ${result.category}`, koTitle: result.koTitle, summary: result.summary, enSummary: result.enSummary || [], words: result.words, needsSummary: false };
           setNews([...updated]);
         } catch {}
-      }
     } catch (e) {
       setUrlError('기사를 가져오지 못했어요. URL을 확인해주세요.');
     } finally {

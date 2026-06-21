@@ -227,8 +227,6 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
         const resized = await resizeImage(ev.target.result, 400, 0.6);
         setPhotoUrl(resized);
         setPhotoAnalysis(null);
-        const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_SLOW_LEARNER_API;
-        if (!hasKey) return;
         setPhotoAnalyzing(true);
         try {
           const forAI = await resizeImage(ev.target.result, 512);
@@ -267,22 +265,10 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
     setSuggestions([]);
     setSelected(null);
     try {
-      const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_SLOW_LEARNER_API;
-      let result;
-      if (!hasKey) {
-        await new Promise(r => setTimeout(r, 800));
-        result = DEMO_SUGGESTIONS[mode] || DEMO_SUGGESTIONS.korean;
-        setError('데모 모드예요. 설정에서 Gemini API 키를 입력하면 나만의 문장을 만들 수 있어요! ⚙️');
-      } else {
-        result = await getSuggestions(text, mode);
-      }
+      const result = await getSuggestions(text, mode);
       setSuggestions(result);
     } catch (e) {
-      if (e.message === 'NO_KEY') {
-        setError('설정에서 Gemini API 키를 입력해주세요. ⚙️');
-      } else {
-        setError(`오류: ${e.message}`);
-      }
+      setError(`오류: ${e.message}`);
       setSuggestions(DEMO_SUGGESTIONS[mode] || DEMO_SUGGESTIONS.korean);
     } finally {
       setLoading(false);

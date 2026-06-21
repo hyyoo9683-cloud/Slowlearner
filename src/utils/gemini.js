@@ -1,5 +1,3 @@
-const MODEL = 'gemini-2.5-flash';
-
 export function getStoredKey() {
   return localStorage.getItem('slowrunner_gemini_key') || '';
 }
@@ -8,48 +6,34 @@ export function setStoredKey(key) {
   localStorage.setItem('slowrunner_gemini_key', key);
 }
 
-function getApiKey() {
-  return import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_SLOW_LEARNER_API || localStorage.getItem('slowrunner_gemini_key');
-}
+async function callGemini(contents, maxOutputTokens = 1024) {
+  const resp = await fetch('/api/ai', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ contents, maxOutputTokens }),
+  });
 
-async function callGemini(contents, retries = 3) {
-  const apiKey = getApiKey();
-  if (!apiKey) throw new Error('NO_KEY');
-
-  for (let i = 0; i < retries; i++) {
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          contents,
-          generationConfig: {
-            maxOutputTokens: 1024,
-            temperature: 0.7,
-            responseMimeType: 'application/json',
-            thinkingConfig: { thinkingBudget: 0 },
-          },
-        }),
-      }
-    );
-
-    if (resp.status === 503 && i < retries - 1) {
-      await new Promise(r => setTimeout(r, (i + 1) * 1500));
-      continue;
-    }
-
-    if (!resp.ok) throw new Error(`API error: ${await resp.text()}`);
-    const data = await resp.json();
-    const parts = data.candidates?.[0]?.content?.parts || [];
-    const text = [...parts].reverse().find(p => p.text)?.text;
-    if (!text) throw new Error('AI 응답이 비어있어요. 잠시 후 다시 시도해주세요.');
-    return text;
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error || 'AI 요청 실패');
   }
-  throw new Error('서버가 혼잡해요. 잠시 후 다시 시도해주세요.');
+
+  const data = await resp.json();
+  if (!data.text) throw new Error('AI 응답이 비어있어요.');
+  return data.text;
 }
 
-// 텍스트 기반 영어 문장 제안
+function parseJSON(raw) {
+  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('AI 응답 형식 오류. 다시 시도해주세요.');
+    return JSON.parse(match[0]);
+  }
+}
+
 export async function getSuggestions(text, mode) {
   const prompt = mode === 'korean'
     ? `You are a friendly English learning assistant. The user is a Korean speaker learning English through daily life journaling. Given their Korean text, suggest 3 natural English sentences with Korean translations and vocabulary.
@@ -86,18 +70,11 @@ Be encouraging, not corrective in tone. Include 1-2 change explanations per sugg
 English text: ${text}`;
 
   const raw = await callGemini([{ parts: [{ text: prompt }] }]);
-  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  try {
-    const parsed = JSON.parse(cleaned);
-    if (parsed.suggestions) return parsed.suggestions;
-  } catch {}
-  const match = cleaned.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('AI 응답 형식 오류. 다시 시도해주세요.');
-  const parsed = JSON.parse(match[0]);
+  const parsed = parseJSON(raw);
+  if (!parsed.suggestions) throw new Error('AI 응답 형식 오류. 다시 시도해주세요.');
   return parsed.suggestions;
 }
 
-// 사진 분석 — 관련 영어 단어 + 예문 제안
 export async function analyzePhoto(base64DataUrl) {
   const base64 = base64DataUrl.split(',')[1];
   const mimeType = base64DataUrl.split(';')[0].split(':')[1];
@@ -124,14 +101,9 @@ Keep words simple and useful for daily journaling. Max 4 words.`;
       { text: prompt },
     ],
   }]);
-
-  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  const match = cleaned.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('Invalid response format');
-  return JSON.parse(match[0]);
+  return parseJSON(raw);
 }
 
-// 오늘의 문화 한 조각
 export async function getCultureCard() {
   const today = new Date().toISOString().slice(0, 10);
   const cached = localStorage.getItem(`sandalog_culture_${today}`);
@@ -141,7 +113,6 @@ export async function getCultureCard() {
 Generate today's cultural insight card in JSON format.
 Focus on practical situations: small talk, school/work culture,
 social customs, holidays, food culture in English-speaking countries.
-Choose topics that help Koreans feel less lost in real conversations with foreigners.
 
 Return ONLY this JSON, no markdown:
 {
@@ -164,15 +135,11 @@ Return ONLY this JSON, no markdown:
 }`;
 
   const raw = await callGemini([{ parts: [{ text: prompt }] }]);
-  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  const match = cleaned.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('AI 응답 형식 오류');
-  const result = JSON.parse(match[0]);
+  const result = parseJSON(raw);
   localStorage.setItem(`sandalog_culture_${today}`, JSON.stringify(result));
   return result;
 }
 
-// 영어 원문 분석 — 한/영 요약 + 핵심 단어
 export async function analyzeArticle(text) {
   const prompt = `You are an English learning assistant for Korean speakers. Analyze this English text.
 
@@ -189,13 +156,9 @@ Return JSON only:
 Keep words to 4 items. Choose words that are useful and interesting for Korean learners.`;
 
   const raw = await callGemini([{ parts: [{ text: prompt }] }]);
-  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  const match = cleaned.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('AI 응답 형식 오류. 다시 시도해주세요.');
-  return JSON.parse(match[0]);
+  return parseJSON(raw);
 }
 
-// 영어 글 첨삭 — 문법/자연스러움/표현 피드백
 export async function proofreadText(original, userText) {
   const prompt = `You are a friendly English writing tutor for Korean learners. Review the student's English writing.
 
@@ -208,16 +171,12 @@ Return JSON only:
   "good": "one thing they did well, in Korean",
   "score": 85
 }
-Be encouraging and specific. Score out of 100. If the text is already good, say so warmly.`;
+Be encouraging and specific. Score out of 100.`;
 
   const raw = await callGemini([{ parts: [{ text: prompt }] }]);
-  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  const match = cleaned.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('AI 응답 형식 오류. 다시 시도해주세요.');
-  return JSON.parse(match[0]);
+  return parseJSON(raw);
 }
 
-// 뉴스 기사 한국어 3줄 요약 + 핵심 단어
 export async function summarizeNews(title, description) {
   const prompt = `You are an English learning assistant for Korean speakers. Summarize this news article.
 
@@ -234,8 +193,5 @@ Return JSON only:
 }`;
 
   const raw = await callGemini([{ parts: [{ text: prompt }] }]);
-  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  const match = cleaned.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('Invalid response format');
-  return JSON.parse(match[0]);
+  return parseJSON(raw);
 }
