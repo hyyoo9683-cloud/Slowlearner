@@ -138,7 +138,7 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
   const [photoUrl, setPhotoUrl] = useState(null);
   const [cropSrc, setCropSrc] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState([]); // 다중 선택 배열
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
@@ -177,7 +177,7 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
     if (mode === 'article') return;
     if (text.length < 5) {
       setSuggestions([]);
-      setSelected(null);
+      setSelected([]);
       return;
     }
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -398,7 +398,7 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
     setError('');
     setLoading(true);
     setSuggestions([]);
-    setSelected(null);
+    setSelected([]);
     try {
       const result = await getSuggestions(text, mode);
       setSuggestions(result);
@@ -412,8 +412,9 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
   const handleSave = () => {
     const existingRecords = loadRecords();
     const isFirst = existingRecords.length === 0;
-    const englishText = (selected?.english || selected?.improved) || (suggestions[0]?.english || suggestions[0]?.improved) || text;
-    const vocabItems = selected?.vocabulary || suggestions[0]?.vocabulary || [];
+    const chosenItems = selected.length > 0 ? selected : suggestions.slice(0, 1);
+    const englishText = chosenItems.map(s => s.english || s.improved).filter(Boolean).join(' ') || text;
+    const vocabItems = chosenItems.flatMap(s => s.vocabulary || []);
     const words = vocabItems.map(v => v.word).filter(Boolean).slice(0, 5);
     const fallbackWords = englishText.match(/\b[a-zA-Z]{4,}\b/g)?.slice(0, 5) || [];
     const finalWords = words.length > 0 ? words : fallbackWords;
@@ -452,7 +453,7 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
     setText('');
     setPhotoUrl(null);
     setSuggestions([]);
-    setSelected(null);
+    setSelected([]);
     setSaved(false);
     setSavedWords([]);
     setSavedText('');
@@ -651,7 +652,7 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
           { id: 'english', label: '영어로' },
           { id: 'article', label: '📄 원문 분석' },
         ].map(m => (
-          <button key={m.id} onClick={() => { setMode(m.id); setSuggestions([]); setSelected(null); setArticleAnalysis(null); setProofread(null); }}
+          <button key={m.id} onClick={() => { setMode(m.id); setSuggestions([]); setSelected([]); setArticleAnalysis(null); setProofread(null); }}
             className="flex-1 py-2.5 text-xs font-semibold transition-all"
             style={{
               background: mode === m.id ? '#ffffff' : 'transparent',
@@ -926,20 +927,31 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
       {/* AI 제안 버블 */}
       {mode !== 'article' && suggestions.length > 0 && (
         <div className="space-y-2 slide-up">
-          <p className="text-[#9a9088] text-xs font-semibold">
-            {mode === 'korean' ? '이렇게 영어로 표현할 수 있어요!' : '더 자연스러운 표현이에요!'}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-[#9a9088] text-xs font-semibold">
+              {mode === 'korean' ? '이렇게 영어로 표현할 수 있어요!' : '더 자연스러운 표현이에요!'}
+            </p>
+            {selected.length > 0 && (
+              <button
+                onClick={() => speakText(selected.map(s => s.english || s.improved).filter(Boolean).join(' '), 'all')}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all active:scale-95"
+                style={{ background: speakingIdx === 'all' ? '#edf5e4' : '#f0f7e8', color: '#4a8a20', border: '1.5px solid #c8e8a0' }}>
+                {speakingIdx === 'all' ? '🔊' : '▶'} {selected.length}개 이어 듣기
+              </button>
+            )}
+          </div>
           {suggestions.map((s, i) => {
-            const isSelected = selected === s;
+            const isSelected = selected.includes(s);
             const mainText = s.english || s.improved || '';
             const vocabItems = s.vocabulary || [];
             const changes = s.changes || [];
             return (
-              <button key={i} onClick={() => setSelected(isSelected ? null : s)}
+              <button key={i} onClick={() => setSelected(prev => isSelected ? prev.filter(x => x !== s) : [...prev, s])}
                 className="w-full text-left p-4 rounded-2xl text-sm transition-all active:scale-95 space-y-2"
                 style={{
                   background: isSelected ? '#edf5e4' : '#ffffff',
                   border: isSelected ? '2px solid #6aaa3a' : '1px solid #e0dbd2',
+                  outline: isSelected ? 'none' : 'none',
                   color: '#3a3530',
                   boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
                 }}>
@@ -955,7 +967,12 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
                       title="발음 듣기">
                       <span className="text-xs">{speakingIdx === i ? '🔊' : '▶'}</span>
                     </button>
-                    {isSelected && <span className="text-[#6aaa3a] text-base">✓</span>}
+                    {isSelected && (
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                        style={{ background: '#6aaa3a', color: 'white' }}>
+                        {selected.indexOf(s) + 1}
+                      </span>
+                    )}
                   </div>
                 </div>
                 {s.korean_translation && (
@@ -967,7 +984,7 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
                   <div className="flex flex-wrap gap-1 pl-4">
                     {vocabItems.map((v, j) => (
                       <span key={j} className="px-2 py-0.5 rounded-full text-[11px]"
-                        style={{ background: isSelected ? '#d4edc4' : '#f0ece4', color: '#5a7a40' }}>
+                        style={{ background: isSelected ? '#d4edc4' : '#f0ece4', color: '#5a7a40', border: 'none' }}>
                         {v.word} · {v.meaning}
                       </span>
                     ))}
@@ -1000,7 +1017,7 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
             background: text.length >= 2 ? '#c84040' : '#f0ece4',
             color: text.length >= 2 ? 'white' : '#c0b8b0',
           }}>
-          기록 저장하기 🌿
+          {selected.length > 1 ? `${selected.length}개 문장으로 기록 저장하기 🌿` : '기록 저장하기 🌿'}
         </button>
       )}
     </div>
