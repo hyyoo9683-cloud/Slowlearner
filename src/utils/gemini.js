@@ -9,7 +9,7 @@ export function setStoredKey(key) {
 }
 
 function getApiKey() {
-  return import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('slowrunner_gemini_key');
+  return import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_SLOW_LEARNER_API || localStorage.getItem('slowrunner_gemini_key');
 }
 
 async function callGemini(contents, retries = 3) {
