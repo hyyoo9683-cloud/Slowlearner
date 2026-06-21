@@ -161,7 +161,7 @@ export default function BooksScreen({ onNavigate }) {
             </div>
           ) : article ? (
             <>
-              <p className="text-white text-sm font-semibold leading-tight">{article.title}</p>
+              <p className="text-[#1a3d0a] text-sm font-semibold leading-tight">{article.title}</p>
               <p className="text-[#7a7268] text-xs leading-relaxed">{article.body?.slice(0, 200)}{article.body?.length > 200 ? '...' : ''}</p>
               <div className="flex items-center gap-2 pt-1">
                 <button onClick={speakArticle}
@@ -192,7 +192,7 @@ export default function BooksScreen({ onNavigate }) {
             <div key={i} className="p-3 rounded-2xl flex items-center gap-3" style={{ background: '#faf8f3', border: '1px solid #ede9e2' }}>
               <span className="text-2xl flex-shrink-0">{p.emoji}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-semibold truncate">{p.title}</p>
+                <p className="text-[#1a3d0a] text-sm font-semibold truncate">{p.title}</p>
                 <p className="text-[#9a9088] text-xs leading-snug mt-0.5">{p.desc}</p>
               </div>
               <div className="flex flex-col gap-1 flex-shrink-0">
@@ -220,7 +220,7 @@ export default function BooksScreen({ onNavigate }) {
                 style={{ background: '#f0ece4' }}>
                 {v.emoji}
               </div>
-              <p className="text-white text-xs font-bold leading-tight">{v.title}</p>
+              <p className="text-[#1a3d0a] text-xs font-bold leading-tight">{v.title}</p>
               <p className="text-[#9a9088] text-[10px] leading-snug">{v.desc}</p>
               <p className="text-[#ff4444] text-[10px] font-semibold">▶ YouTube →</p>
             </a>
@@ -234,7 +234,7 @@ export default function BooksScreen({ onNavigate }) {
         <div className="p-3 rounded-2xl flex items-center gap-3" style={{ background: '#faf8f3', border: '1px solid #ede9e2' }}>
           <span className="text-3xl">📖</span>
           <div>
-            <p className="text-white text-sm font-semibold">{book.title}</p>
+            <p className="text-[#1a3d0a] text-sm font-semibold">{book.title}</p>
             <p className="text-[#9a9088] text-[11px]">{book.author}</p>
             <p className="text-[#7a7268] text-xs mt-1 leading-snug">{book.tip}</p>
           </div>
