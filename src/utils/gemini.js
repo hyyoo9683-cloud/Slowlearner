@@ -9,7 +9,11 @@ export function setStoredKey(key) {
 }
 
 function getApiKey() {
-  return import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_SLOW_LEARNER_API || localStorage.getItem('slowrunner_gemini_key');
+  const key = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_SLOW_LEARNER_API || localStorage.getItem('slowrunner_gemini_key');
+  console.log('[getApiKey] VITE_GEMINI_API_KEY:', import.meta.env.VITE_GEMINI_API_KEY ? 'set' : 'unset');
+  console.log('[getApiKey] VITE_SLOW_LEARNER_API:', import.meta.env.VITE_SLOW_LEARNER_API ? 'set' : 'unset');
+  console.log('[getApiKey] localStorage:', localStorage.getItem('slowrunner_gemini_key') ? 'set' : 'unset');
+  return key;
 }
 
 async function callGemini(contents, retries = 3) {
