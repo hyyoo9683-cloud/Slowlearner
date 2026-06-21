@@ -527,10 +527,11 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
           ref={cropContainerRef}
           className="flex-1 relative overflow-hidden"
           style={{ touchAction: 'none' }}
-          onMouseMove={handleCropPointerMove}
-          onMouseUp={() => { dragRef.current = null; }}
-          onTouchMove={handleCropPointerMove}
-          onTouchEnd={() => { dragRef.current = null; }}
+          onMouseMove={e => { e.stopPropagation(); handleCropPointerMove(e); }}
+          onMouseUp={e => { e.stopPropagation(); dragRef.current = null; }}
+          onTouchStart={e => e.stopPropagation()}
+          onTouchMove={e => { e.stopPropagation(); e.preventDefault(); handleCropPointerMove(e); }}
+          onTouchEnd={e => { e.stopPropagation(); dragRef.current = null; }}
         >
           <img
             ref={cropImgRef}
@@ -566,8 +567,8 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
               paddingBottom: `${sizeFrac * 100}%`,
               cursor: 'move',
             }}
-            onMouseDown={handleCropPointerDown}
-            onTouchStart={handleCropPointerDown}
+            onMouseDown={e => { e.stopPropagation(); handleCropPointerDown(e); }}
+            onTouchStart={e => { e.stopPropagation(); handleCropPointerDown(e); }}
           >
             {/* 3분할 가이드선 */}
             {[1, 2].map(n => (
