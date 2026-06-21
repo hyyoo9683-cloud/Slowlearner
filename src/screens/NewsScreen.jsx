@@ -105,6 +105,7 @@ export default function NewsScreen({ onNavigate }) {
           enSummary: [],
           words: [],
           url: a.url,
+          interestLabel: a.interestLabel || '',
           raw: a,
           needsSummary: true,
         }));
@@ -405,10 +406,18 @@ export default function NewsScreen({ onNavigate }) {
           style={{ background: '#ffffff', border: '1px solid #ede9e2', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
           <button className="w-full text-left p-4" onClick={() => setExpanded(expanded === i ? null : i)}>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                style={{ background: '#edf5e4', color: '#4a8a20' }}>
-                {n.category}
-              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                  style={{ background: '#edf5e4', color: '#4a8a20' }}>
+                  {n.category}
+                </span>
+                {n.interestLabel && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full"
+                    style={{ background: '#f0f7e8', color: '#6a9a40', border: '1px solid #c8e8a0' }}>
+                    {n.interestLabel}
+                  </span>
+                )}
+              </div>
               {n.needsSummary && (
                 <span className="text-[#b0a898] text-xs animate-pulse">🌿 번역 중</span>
               )}

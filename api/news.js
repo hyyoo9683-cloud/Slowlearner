@@ -1,34 +1,43 @@
 // 관심사별 RSS 피드 매핑
+const INTEREST_LABEL = {
+  nature: '🌿 자연·산책',
+  animal: '🐾 동물',
+  food: '🍳 음식·요리',
+  travel: '✈️ 여행',
+  daily: '☕ 일상',
+  culture: '🎨 문화·예술',
+};
+
 const INTEREST_FEEDS = {
   nature: [
-    { name: 'CNN', emoji: '🔴', url: 'http://rss.cnn.com/rss/edition_world.rss' },
-    { name: 'FOX News', emoji: '🦊', url: 'https://moxie.foxnews.com/google-publisher/science.xml' },
-    { name: 'The New Yorker', emoji: '🗽', url: 'https://www.newyorker.com/feed/everything' },
+    { name: 'CNN', emoji: '🔴', url: 'http://rss.cnn.com/rss/edition_world.rss', interest: 'nature' },
+    { name: 'FOX News', emoji: '🦊', url: 'https://moxie.foxnews.com/google-publisher/science.xml', interest: 'nature' },
+    { name: 'The New Yorker', emoji: '🗽', url: 'https://www.newyorker.com/feed/everything', interest: 'nature' },
   ],
   animal: [
-    { name: 'CNN', emoji: '🔴', url: 'http://rss.cnn.com/rss/edition_world.rss' },
-    { name: 'FOX News', emoji: '🦊', url: 'https://moxie.foxnews.com/google-publisher/science.xml' },
-    { name: 'The New Yorker', emoji: '🗽', url: 'https://www.newyorker.com/feed/everything' },
+    { name: 'CNN', emoji: '🔴', url: 'http://rss.cnn.com/rss/edition_world.rss', interest: 'animal' },
+    { name: 'FOX News', emoji: '🦊', url: 'https://moxie.foxnews.com/google-publisher/science.xml', interest: 'animal' },
+    { name: 'The New Yorker', emoji: '🗽', url: 'https://www.newyorker.com/feed/everything', interest: 'animal' },
   ],
   food: [
-    { name: 'CNN', emoji: '🔴', url: 'http://rss.cnn.com/rss/edition_travel.rss' },
-    { name: 'FOX News', emoji: '🦊', url: 'https://moxie.foxnews.com/google-publisher/lifestyle.xml' },
-    { name: 'The New Yorker', emoji: '🗽', url: 'https://www.newyorker.com/feed/everything' },
+    { name: 'CNN', emoji: '🔴', url: 'http://rss.cnn.com/rss/edition_travel.rss', interest: 'food' },
+    { name: 'FOX News', emoji: '🦊', url: 'https://moxie.foxnews.com/google-publisher/lifestyle.xml', interest: 'food' },
+    { name: 'The New Yorker', emoji: '🗽', url: 'https://www.newyorker.com/feed/everything', interest: 'food' },
   ],
   travel: [
-    { name: 'CNN', emoji: '🔴', url: 'http://rss.cnn.com/rss/edition_travel.rss' },
-    { name: 'FOX News', emoji: '🦊', url: 'https://moxie.foxnews.com/google-publisher/travel.xml' },
-    { name: 'The New Yorker', emoji: '🗽', url: 'https://www.newyorker.com/feed/everything' },
+    { name: 'CNN', emoji: '🔴', url: 'http://rss.cnn.com/rss/edition_travel.rss', interest: 'travel' },
+    { name: 'FOX News', emoji: '🦊', url: 'https://moxie.foxnews.com/google-publisher/travel.xml', interest: 'travel' },
+    { name: 'The New Yorker', emoji: '🗽', url: 'https://www.newyorker.com/feed/everything', interest: 'travel' },
   ],
   daily: [
-    { name: 'CNN', emoji: '🔴', url: 'http://rss.cnn.com/rss/edition_world.rss' },
-    { name: 'FOX News', emoji: '🦊', url: 'https://moxie.foxnews.com/google-publisher/lifestyle.xml' },
-    { name: 'The New Yorker', emoji: '🗽', url: 'https://www.newyorker.com/feed/everything' },
+    { name: 'CNN', emoji: '🔴', url: 'http://rss.cnn.com/rss/edition_world.rss', interest: 'daily' },
+    { name: 'FOX News', emoji: '🦊', url: 'https://moxie.foxnews.com/google-publisher/lifestyle.xml', interest: 'daily' },
+    { name: 'The New Yorker', emoji: '🗽', url: 'https://www.newyorker.com/feed/everything', interest: 'daily' },
   ],
   culture: [
-    { name: 'CNN', emoji: '🔴', url: 'http://rss.cnn.com/rss/edition_entertainment.rss' },
-    { name: 'FOX News', emoji: '🦊', url: 'https://moxie.foxnews.com/google-publisher/entertainment.xml' },
-    { name: 'The New Yorker', emoji: '🗽', url: 'https://www.newyorker.com/feed/culture' },
+    { name: 'CNN', emoji: '🔴', url: 'http://rss.cnn.com/rss/edition_entertainment.rss', interest: 'culture' },
+    { name: 'FOX News', emoji: '🦊', url: 'https://moxie.foxnews.com/google-publisher/entertainment.xml', interest: 'culture' },
+    { name: 'The New Yorker', emoji: '🗽', url: 'https://www.newyorker.com/feed/culture', interest: 'culture' },
   ],
 };
 
@@ -57,6 +66,8 @@ function parseRSS(xml, source) {
         url,
         source: source.name,
         sourceEmoji: source.emoji,
+        interest: source.interest || '',
+        interestLabel: INTEREST_LABEL[source.interest] || '',
         publishedAt,
       });
     }
