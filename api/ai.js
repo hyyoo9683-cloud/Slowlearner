@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   const apiKey = process.env.SLOW_LEARNER_API || process.env.VITE_SLOW_LEARNER_API || process.env.GEMINI_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
-  const { contents, maxOutputTokens = 1024 } = req.body;
+  const { contents, maxOutputTokens = 2048 } = req.body;
   if (!contents) return res.status(400).json({ error: 'Missing contents' });
 
   for (let i = 0; i < 3; i++) {

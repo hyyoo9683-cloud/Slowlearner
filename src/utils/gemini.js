@@ -25,13 +25,36 @@ async function callGemini(contents, maxOutputTokens = 1024) {
 
 function parseJSON(raw) {
   const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    const match = cleaned.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('AI 응답 형식 오류. 다시 시도해주세요.');
-    return JSON.parse(match[0]);
+  // 1. 그대로 파싱
+  try { return JSON.parse(cleaned); } catch {}
+  // 2. 첫 { 부터 마지막 } 까지 추출
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start !== -1 && end !== -1) {
+    try { return JSON.parse(cleaned.slice(start, end + 1)); } catch {}
   }
+  // 3. JSON이 잘린 경우 — 배열/객체를 억지로 닫기
+  if (start !== -1) {
+    let s = cleaned.slice(start);
+    // 열린 따옴표를 닫고, 열린 배열/객체 카운트해서 닫아줌
+    let inStr = false, escaped = false;
+    let opens = [];
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i];
+      if (escaped) { escaped = false; continue; }
+      if (c === '\\') { escaped = true; continue; }
+      if (c === '"') { inStr = !inStr; continue; }
+      if (!inStr) {
+        if (c === '{') opens.push('}');
+        else if (c === '[') opens.push(']');
+        else if (c === '}' || c === ']') opens.pop();
+      }
+    }
+    if (inStr) s += '"';
+    s += opens.reverse().join('');
+    try { return JSON.parse(s); } catch {}
+  }
+  throw new Error('AI 응답 형식 오류. 다시 시도해주세요.');
 }
 
 export async function getSuggestions(text, mode) {
