@@ -79,21 +79,21 @@ export async function analyzePhoto(base64DataUrl) {
   const base64 = base64DataUrl.split(',')[1];
   const mimeType = base64DataUrl.split(';')[0].split(':')[1];
 
-  const prompt = `You are a friendly English learning assistant for Korean speakers. Analyze this photo and suggest vocabulary related to what you see.
+  const prompt = `You are an English learning assistant for Korean speakers. Look carefully at this photo and describe exactly what you see — objects, people, animals, food, places, mood, colors, textures.
 
-Return JSON only:
+Return JSON only (no markdown):
 {
-  "scene": "one short Korean sentence describing the scene",
+  "scene": "사진에 보이는 것을 구체적으로 묘사한 한국어 한 문장",
   "words": [
-    {"english": "stone wall", "korean": "돌담"},
-    {"english": "moss", "korean": "이끼"},
-    {"english": "path", "korean": "길"},
-    {"english": "sunlight", "korean": "햇빛"}
+    {"english": "specific noun or phrase visible in photo", "korean": "한국어"},
+    {"english": "specific noun or phrase visible in photo", "korean": "한국어"},
+    {"english": "specific noun or phrase visible in photo", "korean": "한국어"},
+    {"english": "specific noun or phrase visible in photo", "korean": "한국어"}
   ],
-  "sentence": "One natural English sentence describing this scene"
+  "sentence": "One natural English sentence a Korean person could write in their journal about this photo"
 }
 
-Keep words simple and useful for daily journaling. Max 4 words.`;
+Important: words must be SPECIFIC to what's actually in this photo, not generic. If you see a cat, say "tabby cat" not just "animal". If you see coffee, say "latte art" not just "drink".`;
 
   const raw = await callGemini([{
     parts: [

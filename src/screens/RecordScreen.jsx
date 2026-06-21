@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { getSuggestions, analyzePhoto, analyzeArticle, proofreadText, getStoredKey } from '../utils/gemini';
 import { saveRecord, loadRecords } from '../utils/storage';
 
@@ -12,42 +12,6 @@ function saveDraft(data) {
 function loadDraft() { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); } catch { return null; } }
 function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
 
-const DEMO_SUGGESTIONS = {
-  korean: [
-    {
-      english: 'I came across a moss-covered stone wall along the path.',
-      korean_translation: '길을 걷다가 이끼로 덮인 돌담을 발견했어요.',
-      vocabulary: [{ word: 'came across', meaning: '우연히 발견하다' }, { word: 'moss-covered', meaning: '이끼로 덮인' }],
-    },
-    {
-      english: 'The old stone wall was draped in soft, green moss.',
-      korean_translation: '오래된 돌담이 부드럽고 푸른 이끼로 뒤덮여 있었어요.',
-      vocabulary: [{ word: 'draped', meaning: '덮인, 감싸인' }, { word: 'soft', meaning: '부드러운' }],
-    },
-    {
-      english: 'A beautiful mossy stone wall caught my eye on my walk.',
-      korean_translation: '산책 중에 아름다운 이끼 낀 돌담이 눈에 들어왔어요.',
-      vocabulary: [{ word: 'caught my eye', meaning: '눈에 띄다' }, { word: 'mossy', meaning: '이끼가 낀' }],
-    },
-  ],
-  english: [
-    {
-      improved: 'The kittens were frolicking playfully in the warm sunlight.',
-      korean_translation: '새끼 고양이들이 따뜻한 햇빛 속에서 신나게 뛰어놀고 있었어요.',
-      changes: [{ original: 'playing', improved: 'frolicking', reason_korean: '더 생동감 있고 귀여운 표현이에요' }],
-    },
-    {
-      improved: 'I watched the tiny kittens tumble and leap around each other.',
-      korean_translation: '작은 고양이들이 서로 주변에서 구르고 뛰는 모습을 지켜봤어요.',
-      changes: [{ original: 'run', improved: 'tumble and leap', reason_korean: '고양이의 움직임을 더 생생하게 표현해요' }],
-    },
-    {
-      improved: 'A group of little kittens were chasing each other joyfully.',
-      korean_translation: '작은 고양이들 무리가 즐겁게 서로를 쫓아다니고 있었어요.',
-      changes: [{ original: 'small', improved: 'little', reason_korean: '더 자연스럽고 따뜻한 표현이에요' }],
-    },
-  ],
-};
 
 async function generateShareImage(englishText, words) {
   const canvas = document.createElement('canvas');
@@ -172,6 +136,7 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
     }
   }, [prefillText]);
   const [photoUrl, setPhotoUrl] = useState(null);
+  const [cropSrc, setCropSrc] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -222,27 +187,72 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = async (ev) => {
+    reader.onload = (ev) => setCropSrc(ev.target.result);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleCropDone = async (croppedDataUrl) => {
+    setCropSrc(null);
+    try {
+      const resized = await resizeImage(croppedDataUrl, 400, 0.6);
+      setPhotoUrl(resized);
+      setPhotoAnalysis(null);
+      setPhotoAnalyzing(true);
       try {
-        const resized = await resizeImage(ev.target.result, 400, 0.6);
-        setPhotoUrl(resized);
-        setPhotoAnalysis(null);
-        setPhotoAnalyzing(true);
-        try {
-          const forAI = await resizeImage(ev.target.result, 512);
-          const result = await analyzePhoto(forAI);
-          setPhotoAnalysis(result);
-          if (result.sentence && !text) setText(result.sentence);
-        } catch {
-          // AI 분석 실패해도 사진은 유지
-        } finally {
-          setPhotoAnalyzing(false);
-        }
+        const forAI = await resizeImage(croppedDataUrl, 768, 0.9);
+        const result = await analyzePhoto(forAI);
+        setPhotoAnalysis(result);
+        if (result.sentence && !text) setText(result.sentence);
       } catch {
+        // AI 분석 실패해도 사진은 유지
+      } finally {
         setPhotoAnalyzing(false);
       }
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      setPhotoAnalyzing(false);
+    }
+  };
+
+  const cropCanvasRef = useRef(null);
+  const cropImgRef = useRef(null);
+  const dragRef = useRef(null);
+  const [cropBox, setCropBox] = useState({ x: 0, y: 0, size: 0 });
+  const [cropImgSize, setCropImgSize] = useState({ w: 0, h: 0, scale: 1 });
+
+  const initCrop = useCallback((img) => {
+    if (!img) return;
+    cropImgRef.current = img;
+    const rect = img.getBoundingClientRect();
+    const minSide = Math.min(rect.width, rect.height);
+    const size = minSide * 0.8;
+    const x = (rect.width - size) / 2;
+    const y = (rect.height - size) / 2;
+    setCropBox({ x, y, size });
+    setCropImgSize({ w: rect.width, h: rect.height, scale: img.naturalWidth / rect.width });
+  }, []);
+
+  const handleCropDrag = (clientX, clientY) => {
+    if (!dragRef.current || !cropImgRef.current) return;
+    const rect = cropImgRef.current.getBoundingClientRect();
+    const dx = clientX - dragRef.current.startX;
+    const dy = clientY - dragRef.current.startY;
+    const { size } = cropBox;
+    const newX = Math.max(0, Math.min(rect.width - size, dragRef.current.boxX + dx));
+    const newY = Math.max(0, Math.min(rect.height - size, dragRef.current.boxY + dy));
+    setCropBox(b => ({ ...b, x: newX, y: newY }));
+  };
+
+  const confirmCrop = () => {
+    const img = cropImgRef.current;
+    if (!img) return;
+    const scale = img.naturalWidth / img.getBoundingClientRect().width;
+    const canvas = document.createElement('canvas');
+    const s = cropBox.size * scale;
+    canvas.width = s;
+    canvas.height = s;
+    canvas.getContext('2d').drawImage(img, cropBox.x * scale, cropBox.y * scale, s, s, 0, 0, s, s);
+    handleCropDone(canvas.toDataURL('image/jpeg', 0.9));
   };
 
   const resizeImage = (dataUrl, maxSize, quality = 0.8) => new Promise((resolve) => {
@@ -269,7 +279,6 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
       setSuggestions(result);
     } catch (e) {
       setError(`오류: ${e.message}`);
-      setSuggestions(DEMO_SUGGESTIONS[mode] || DEMO_SUGGESTIONS.korean);
     } finally {
       setLoading(false);
     }
@@ -411,6 +420,52 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
             계속 기록하기
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (cropSrc) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#000' }}>
+        <div className="flex items-center justify-between px-4 py-3" style={{ background: '#111' }}>
+          <button onClick={() => setCropSrc(null)} className="text-white text-sm">취소</button>
+          <p className="text-white text-sm font-semibold">사진 크롭</p>
+          <button onClick={confirmCrop} className="text-[#6aaa3a] text-sm font-bold">완료</button>
+        </div>
+        <div className="flex-1 relative overflow-hidden flex items-center justify-center"
+          onMouseMove={e => handleCropDrag(e.clientX, e.clientY)}
+          onMouseUp={() => { dragRef.current = null; }}
+          onTouchMove={e => handleCropDrag(e.touches[0].clientX, e.touches[0].clientY)}
+          onTouchEnd={() => { dragRef.current = null; }}>
+          <img
+            ref={el => el && initCrop(el)}
+            src={cropSrc}
+            alt=""
+            className="max-w-full max-h-full object-contain select-none"
+            draggable={false}
+          />
+          {cropBox.size > 0 && (
+            <div
+              className="absolute border-2 border-white cursor-move"
+              style={{
+                left: cropImgRef.current?.getBoundingClientRect().left - (cropImgRef.current?.parentElement?.getBoundingClientRect().left || 0) + cropBox.x,
+                top: cropImgRef.current?.getBoundingClientRect().top - (cropImgRef.current?.parentElement?.getBoundingClientRect().top || 0) + cropBox.y,
+                width: cropBox.size,
+                height: cropBox.size,
+                boxShadow: '0 0 0 9999px rgba(0,0,0,0.55)',
+              }}
+              onMouseDown={e => { dragRef.current = { startX: e.clientX, startY: e.clientY, boxX: cropBox.x, boxY: cropBox.y }; e.preventDefault(); }}
+              onTouchStart={e => { dragRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, boxX: cropBox.x, boxY: cropBox.y }; }}
+            >
+              <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none">
+                {Array.from({ length: 9 }).map((_, i) => (
+                  <div key={i} style={{ border: '0.5px solid rgba(255,255,255,0.4)' }} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <p className="text-center text-[#aaa] text-xs py-3">박스를 드래그해서 원하는 영역을 선택하세요</p>
       </div>
     );
   }
