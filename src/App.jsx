@@ -11,6 +11,7 @@ import OnboardingScreen, { loadOnboarding } from './screens/OnboardingScreen';
 
 export default function App() {
   const [tab, setTab] = useState('home');
+  const [prefillText, setPrefillText] = useState('');
   useEffect(() => { applyFontSize(getFontSize()); }, []);
   const [onboardingDone, setOnboardingDone] = useState(() => !!loadOnboarding());
   const [userProfile, setUserProfile] = useState(() => loadOnboarding());
@@ -22,14 +23,18 @@ export default function App() {
     setOnboardingDone(true);
   };
 
+  const handleFillRecord = (text) => {
+    setPrefillText(text);
+  };
+
   if (!onboardingDone) {
     return <OnboardingScreen onDone={handleOnboardingDone} />;
   }
 
   const screen = () => {
     switch (tab) {
-      case 'home': return <HomeScreen onNavigate={navigate} />;
-      case 'record': return <RecordScreen />;
+      case 'home': return <HomeScreen onNavigate={navigate} onFillRecord={handleFillRecord} />;
+      case 'record': return <RecordScreen prefillText={prefillText} onClearPrefill={() => setPrefillText('')} />;
       case 'news': return <NewsScreen onNavigate={navigate} />;
       case 'gallery': return <GalleryScreen onNavigate={navigate} />;
       case 'books': return <BooksScreen />;

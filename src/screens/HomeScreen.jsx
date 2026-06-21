@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ForestBackground from '../components/ForestBackground';
 import RedHoodCharacter from '../components/RedHoodCharacter';
+import CultureCard from '../components/CultureCard';
 import { loadRecords } from '../utils/storage';
 
 const moods = [
@@ -15,7 +16,7 @@ const sampleNews = [
   { title: 'New AI Tools Help Small Farmers', ko: 'AI가 소농을 돕는다', category: '기술' },
 ];
 
-export default function HomeScreen({ onNavigate }) {
+export default function HomeScreen({ onNavigate, onFillRecord }) {
   const [mood, setMood] = useState('sunny');
   const records = loadRecords();
   const recent = records.slice(-5);
@@ -89,6 +90,9 @@ export default function HomeScreen({ onNavigate }) {
             ))}
           </div>
         </div>
+
+        {/* Culture Card */}
+        <CultureCard onNavigate={onNavigate} onFillRecord={onFillRecord} />
 
         {/* Book Preview */}
         <div className="p-4 rounded-3xl"

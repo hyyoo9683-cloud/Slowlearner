@@ -96,6 +96,47 @@ Keep words simple and useful for daily journaling. Max 4 words.`;
   return JSON.parse(match[0]);
 }
 
+// 오늘의 문화 한 조각
+export async function getCultureCard() {
+  const today = new Date().toISOString().slice(0, 10);
+  const cached = localStorage.getItem(`sandalog_culture_${today}`);
+  if (cached) return JSON.parse(cached);
+
+  const prompt = `You are a cultural context guide for Korean people learning English.
+Generate today's cultural insight card in JSON format.
+Focus on practical situations: small talk, school/work culture,
+social customs, holidays, food culture in English-speaking countries.
+Choose topics that help Koreans feel less lost in real conversations with foreigners.
+
+Return ONLY this JSON, no markdown:
+{
+  "category": "교육 | 스몰토크 | 문화행사 | 식문화 | 직장문화 | 일상습관",
+  "emoji": "(relevant emoji)",
+  "title": "(Korean title, question format preferred, under 25 chars)",
+  "description": "(Korean, 3-4 sentences, background context, warm tone, no judgment)",
+  "expressions": [
+    {
+      "english": "(natural expression)",
+      "korean": "(Korean explanation)",
+      "example": "(one example sentence in English)"
+    },
+    {
+      "english": "(natural expression)",
+      "korean": "(Korean explanation)",
+      "example": "(one example sentence in English)"
+    }
+  ]
+}`;
+
+  const raw = await callGemini([{ parts: [{ text: prompt }] }]);
+  const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error('AI 응답 형식 오류');
+  const result = JSON.parse(match[0]);
+  localStorage.setItem(`sandalog_culture_${today}`, JSON.stringify(result));
+  return result;
+}
+
 // 영어 원문 분석 — 한/영 요약 + 핵심 단어
 export async function analyzeArticle(text) {
   const prompt = `You are an English learning assistant for Korean speakers. Analyze this English text.

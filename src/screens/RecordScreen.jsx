@@ -134,10 +134,18 @@ function wrapText(ctx, text, maxWidth, fontSize) {
   return lines.slice(0, 3);
 }
 
-export default function RecordScreen() {
+export default function RecordScreen({ prefillText, onClearPrefill }) {
   const draft = loadDraft();
-  const [mode, setMode] = useState(draft?.mode || 'korean');
-  const [text, setText] = useState(draft?.text || '');
+  const [mode, setMode] = useState(prefillText ? 'english' : (draft?.mode || 'korean'));
+  const [text, setText] = useState(prefillText || draft?.text || '');
+
+  useEffect(() => {
+    if (prefillText) {
+      setText(prefillText);
+      setMode('english');
+      onClearPrefill?.();
+    }
+  }, [prefillText]);
   const [photoUrl, setPhotoUrl] = useState(draft?.photoUrl || null);
   const [suggestions, setSuggestions] = useState([]);
   const [selected, setSelected] = useState(null);
