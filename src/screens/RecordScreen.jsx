@@ -184,7 +184,7 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
         const resized = await resizeImage(ev.target.result, 400, 0.6);
         setPhotoUrl(resized);
         setPhotoAnalysis(null);
-        const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY;
+        const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_SLOW_LEARNER_API;
         if (!hasKey) return;
         setPhotoAnalyzing(true);
         try {
@@ -224,7 +224,7 @@ export default function RecordScreen({ prefillText, onClearPrefill }) {
     setSuggestions([]);
     setSelected(null);
     try {
-      const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY;
+      const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_SLOW_LEARNER_API;
       let result;
       if (!hasKey) {
         await new Promise(r => setTimeout(r, 800));

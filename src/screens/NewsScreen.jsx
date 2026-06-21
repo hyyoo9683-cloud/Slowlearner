@@ -83,7 +83,7 @@ export default function NewsScreen({ onNavigate }) {
           needsSummary: true,
         }));
         setNews(rawNews);
-        const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY;
+        const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_SLOW_LEARNER_API;
         if (hasKey) {
           summarizeAll(rawNews, data.articles);
         }
@@ -296,7 +296,7 @@ export default function NewsScreen({ onNavigate }) {
       const resp = await fetch(`/api/fetch-article?url=${encodeURIComponent(urlInput)}`);
       const data = await resp.json();
       if (data.error) throw new Error(data.error);
-      const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY;
+      const hasKey = getStoredKey() || import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_SLOW_LEARNER_API;
       const newItem = {
         category: '🔗 직접 추가',
         title: data.title || urlInput,
