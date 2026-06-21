@@ -1,4 +1,20 @@
-const MODEL = 'gemini-2.5-flash';
+const MODELS = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+
+async function callModel(model, apiKey, contents, maxOutputTokens) {
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        contents,
+        generationConfig: { maxOutputTokens, temperature: 0.7, responseMimeType: 'application/json' },
+      }),
+      signal: AbortSignal.timeout(20000),
+    }
+  );
+  return resp;
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,44 +30,35 @@ export default async function handler(req, res) {
   const { contents, maxOutputTokens = 2048 } = req.body;
   if (!contents) return res.status(400).json({ error: 'Missing contents' });
 
-  for (let i = 0; i < 3; i++) {
-    try {
-      const resp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            contents,
-            generationConfig: {
-              maxOutputTokens,
-              temperature: 0.7,
-              responseMimeType: 'application/json',
-            },
-          }),
-          signal: AbortSignal.timeout(20000),
+  let lastError = '';
+
+  for (const model of MODELS) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const resp = await callModel(model, apiKey, contents, maxOutputTokens);
+
+        if (resp.status === 503) {
+          await new Promise(r => setTimeout(r, (attempt + 1) * 1000));
+          continue; // retry same model once, then fall through to next model
         }
-      );
 
-      if (resp.status === 503 && i < 2) {
-        await new Promise(r => setTimeout(r, (i + 1) * 1500));
-        continue;
+        if (!resp.ok) {
+          lastError = await resp.text();
+          break; // non-503 error on this model → try next model
+        }
+
+        const data = await resp.json();
+        const parts = data.candidates?.[0]?.content?.parts || [];
+        const text = [...parts].reverse().find(p => p.text)?.text;
+        if (!text) { lastError = '빈 응답'; break; }
+
+        return res.status(200).json({ text, model });
+      } catch (e) {
+        lastError = e.message;
+        break;
       }
-
-      if (!resp.ok) {
-        const err = await resp.text();
-        return res.status(resp.status).json({ error: err });
-      }
-
-      const data = await resp.json();
-      const parts = data.candidates?.[0]?.content?.parts || [];
-      const text = [...parts].reverse().find(p => p.text)?.text;
-      if (!text) return res.status(500).json({ error: '빈 응답' });
-
-      return res.status(200).json({ text });
-    } catch (e) {
-      if (i === 2) return res.status(500).json({ error: e.message });
-      await new Promise(r => setTimeout(r, (i + 1) * 1500));
     }
   }
+
+  return res.status(503).json({ error: '잠시 후 다시 시도해주세요. (AI 서버 혼잡)' });
 }
