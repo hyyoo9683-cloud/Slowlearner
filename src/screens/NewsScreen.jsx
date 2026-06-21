@@ -63,12 +63,23 @@ function WordChip({ word }) {
   );
 }
 
+const ALL_INTERESTS = [
+  { id: 'nature', label: '🌿 자연·산책' },
+  { id: 'animal', label: '🐾 동물' },
+  { id: 'food', label: '🍳 음식·요리' },
+  { id: 'travel', label: '✈️ 여행' },
+  { id: 'daily', label: '☕ 일상' },
+  { id: 'culture', label: '🎨 문화·예술' },
+];
+
 export default function NewsScreen({ onNavigate }) {
   const [expanded, setExpanded] = useState(null);
   const [news, setNews] = useState(FALLBACK_NEWS);
   const [loading, setLoading] = useState(true);
   const [isLive, setIsLive] = useState(false);
   const [summarizing, setSummarizing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState(null);
+  const [userInterests, setUserInterests] = useState([]);
   const [urlInput, setUrlInput] = useState('');
   const [urlLoading, setUrlLoading] = useState(false);
   const [urlError, setUrlError] = useState('');
@@ -90,7 +101,10 @@ export default function NewsScreen({ onNavigate }) {
     try {
       const profile = loadOnboarding();
       const interests = profile?.interests || [];
-      const query = interests.length > 0 ? `?interests=${interests.join(',')}` : '';
+      setUserInterests(interests);
+      // Always fetch all categories so user can browse non-selected ones too
+      const allIds = ALL_INTERESTS.map(i => i.id);
+      const query = `?interests=${allIds.join(',')}`;
       const resp = await fetch(`/api/news${query}`);
       if (!resp.ok) throw new Error('fetch failed');
       const data = await resp.json();
@@ -105,6 +119,7 @@ export default function NewsScreen({ onNavigate }) {
           enSummary: [],
           words: [],
           url: a.url,
+          interest: a.interest || '',
           interestLabel: a.interestLabel || '',
           raw: a,
           needsSummary: true,
@@ -136,6 +151,7 @@ export default function NewsScreen({ onNavigate }) {
           summary: result.summary,
           enSummary: result.enSummary || [],
           words: result.words,
+          interest: a.interest || updated[i].interest || '',
           needsSummary: false,
         };
       } catch {
@@ -366,6 +382,37 @@ export default function NewsScreen({ onNavigate }) {
         </div>
       </div>
 
+      {/* 카테고리 필터 */}
+      <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+        <button
+          onClick={() => setActiveFilter(null)}
+          className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+          style={{
+            background: activeFilter === null ? '#edf5e4' : '#ffffff',
+            border: activeFilter === null ? '1.5px solid #6aaa3a' : '1px solid #e0dbd2',
+            color: activeFilter === null ? '#4a8a20' : '#9a9088',
+          }}>
+          전체
+        </button>
+        {ALL_INTERESTS.map(cat => {
+          const isMine = userInterests.includes(cat.id);
+          const isActive = activeFilter === cat.id;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setActiveFilter(isActive ? null : cat.id)}
+              className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+              style={{
+                background: isActive ? '#edf5e4' : isMine ? '#f4faf0' : '#ffffff',
+                border: isActive ? '1.5px solid #6aaa3a' : isMine ? '1px solid #c8e8a0' : '1px solid #e0dbd2',
+                color: isActive ? '#4a8a20' : isMine ? '#6aaa3a' : '#b0a898',
+              }}>
+              {cat.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* URL 입력 */}
       <div className="space-y-1.5">
         <div className="flex gap-2">
@@ -401,7 +448,7 @@ export default function NewsScreen({ onNavigate }) {
         </div>
       )}
 
-      {!loading && news.map((n, i) => (
+      {!loading && news.filter(n => !activeFilter || n.interest === activeFilter).slice(0, 6).map((n, i) => (
         <div key={i} className="rounded-2xl overflow-hidden"
           style={{ background: '#ffffff', border: '1px solid #ede9e2', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
           <button className="w-full text-left p-4" onClick={() => setExpanded(expanded === i ? null : i)}>
