@@ -24,7 +24,12 @@ async function callGemini(contents, retries = 3) {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           contents,
-          generationConfig: { maxOutputTokens: 512, temperature: 0.7, responseMimeType: 'application/json' },
+          generationConfig: {
+            maxOutputTokens: 1024,
+            temperature: 0.7,
+            responseMimeType: 'application/json',
+          },
+          thinkingConfig: { thinkingBudget: 0 },
         }),
       }
     );
@@ -36,7 +41,8 @@ async function callGemini(contents, retries = 3) {
 
     if (!resp.ok) throw new Error(`API error: ${await resp.text()}`);
     const data = await resp.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    const text = [...parts].reverse().find(p => p.text)?.text;
     if (!text) throw new Error('AI 응답이 비어있어요. 잠시 후 다시 시도해주세요.');
     return text;
   }
