@@ -304,19 +304,39 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
     setRecording(true);
   };
 
-  const speakText = (txt, idx) => {
-    window.speechSynthesis.cancel();
+  const audioRef = useRef(null);
+  const speakText = async (txt, idx) => {
+    // 이미 재생 중이면 중지
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     if (speakingIdx === idx) { setSpeakingIdx(null); return; }
-    const utt = new SpeechSynthesisUtterance(txt);
-    utt.lang = 'en-US';
-    utt.rate = 0.9;
-    const voices = window.speechSynthesis.getVoices();
-    const enVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Samantha') || v.name.includes('Google US') || v.name.includes('Karen') || v.name.includes('Daniel'))) || voices.find(v => v.lang.startsWith('en'));
-    if (enVoice) utt.voice = enVoice;
-    utt.onend = () => setSpeakingIdx(null);
-    utt.onerror = () => setSpeakingIdx(null);
+
     setSpeakingIdx(idx);
-    window.speechSynthesis.speak(utt);
+    try {
+      const resp = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ text: txt }),
+      });
+      if (!resp.ok) throw new Error('tts failed');
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => { setSpeakingIdx(null); URL.revokeObjectURL(url); };
+      audio.onerror = () => { setSpeakingIdx(null); URL.revokeObjectURL(url); };
+      await audio.play();
+    } catch {
+      // Gemini TTS 실패 시 브라우저 TTS 폴백
+      const utt = new SpeechSynthesisUtterance(txt);
+      utt.lang = 'en-US';
+      utt.rate = 0.9;
+      const voices = window.speechSynthesis.getVoices();
+      const enVoice = voices.find(v => v.lang.startsWith('en')) ;
+      if (enVoice) utt.voice = enVoice;
+      utt.onend = () => setSpeakingIdx(null);
+      utt.onerror = () => setSpeakingIdx(null);
+      window.speechSynthesis.speak(utt);
+    }
   };
 
   const handleSuggest = async () => {
