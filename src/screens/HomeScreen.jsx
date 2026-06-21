@@ -3,6 +3,7 @@ import ForestBackground from '../components/ForestBackground';
 import RedHoodCharacter from '../components/RedHoodCharacter';
 import CultureCard from '../components/CultureCard';
 import { loadRecords } from '../utils/storage';
+import { loadOnboarding } from './OnboardingScreen';
 
 const moods = [
   { id: 'sunny', label: '맑음', emoji: '☀️' },
@@ -81,7 +82,10 @@ export default function HomeScreen({ onNavigate, onFillRecord }) {
         <div className="p-4 rounded-3xl space-y-3"
           style={{ background: '#faf8f3', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', border: '1px solid #f0ece4' }}>
           <div className="flex justify-between items-center">
-            <p className="text-[#3a3530] text-sm font-bold">오늘의 뉴스</p>
+            <div>
+              <p className="text-[#3a3530] text-sm font-bold">오늘의 뉴스</p>
+              {(() => { const p = loadOnboarding(); return p?.interests?.length > 0 && <p className="text-[#b0a898] text-[10px]">{p.interests.join(' · ')} 관심사 기준</p>; })()}
+            </div>
             <button onClick={() => onNavigate('news')} className="text-[#6aaa3a] text-xs font-medium">더 보기 →</button>
           </div>
           <div className="space-y-2">

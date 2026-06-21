@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { summarizeNews, getSuggestions, getStoredKey } from '../utils/gemini';
 import { saveRecord } from '../utils/storage';
+import { loadOnboarding } from './OnboardingScreen';
 
 const FALLBACK_NEWS = [
   {
@@ -87,7 +88,10 @@ export default function NewsScreen({ onNavigate }) {
   const fetchNews = async () => {
     setLoading(true);
     try {
-      const resp = await fetch('/api/news');
+      const profile = loadOnboarding();
+      const interests = profile?.interests || [];
+      const query = interests.length > 0 ? `?interests=${interests.join(',')}` : '';
+      const resp = await fetch(`/api/news${query}`);
       if (!resp.ok) throw new Error('fetch failed');
       const data = await resp.json();
 
