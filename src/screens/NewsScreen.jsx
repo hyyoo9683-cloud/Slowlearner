@@ -120,26 +120,24 @@ export default function NewsScreen({ onNavigate }) {
   const summarizeAll = async (rawNews, articles) => {
     setSummarizing(true);
     const updated = [...rawNews];
-    for (let i = 0; i < articles.length; i++) {
+    await Promise.all(articles.map(async (a, i) => {
       try {
-        const a = articles[i];
         const result = await summarizeNews(a.title, a.description);
         const emoji = CATEGORY_EMOJI[result.category] || '🌍';
         updated[i] = {
           ...updated[i],
-          category: `${emoji} ${result.category}`,
+          category: `${a.sourceEmoji || emoji} ${result.category}`,
           koTitle: result.koTitle,
           summary: result.summary,
           enSummary: result.enSummary || [],
           words: result.words,
           needsSummary: false,
         };
-        setNews([...updated]);
       } catch {
         updated[i] = { ...updated[i], needsSummary: false };
-        setNews([...updated]);
       }
-    }
+      setNews([...updated]);
+    }));
     setSummarizing(false);
   };
 
@@ -408,11 +406,24 @@ export default function NewsScreen({ onNavigate }) {
                 {n.category}
               </span>
               {n.needsSummary && (
-                <span className="text-[#b0a898] text-xs">번역 중...</span>
+                <span className="text-[#b0a898] text-xs animate-pulse">🌿 번역 중</span>
               )}
             </div>
             <p className="text-[#3a3530] font-bold text-sm mt-2 leading-tight line-clamp-2">{n.title}</p>
-            <p className="text-[#9a9088] text-xs mt-1">{n.koTitle}</p>
+            {n.needsSummary
+              ? <p className="text-[#b0a898] text-xs mt-1 line-clamp-2">{n.raw?.description || ''}</p>
+              : <p className="text-[#9a9088] text-xs mt-1">{n.koTitle}</p>
+            }
+            {n.words?.length > 0 && !n.needsSummary && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {n.words.slice(0, 3).map((w, j) => (
+                  <span key={j} className="px-2 py-0.5 rounded-full text-[10px] font-medium"
+                    style={{ background: '#edf5e4', color: '#4a8a20', border: '1px solid #c8e8a0' }}>
+                    {typeof w === 'object' ? w.english || w.word : w}
+                  </span>
+                ))}
+              </div>
+            )}
           </button>
 
           {expanded === i && (
