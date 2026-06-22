@@ -4,85 +4,47 @@ const DEFAULT_COLORS = {
   hair: '#4a2c0a',
   skin: '#f8d5b0',
   eyes: '#2a1a0a',
-  outfit_top: '#4a8a20',
-  outfit_bottom: '#2a4a8a',
-  shoes: '#3a2a1a',
   cheeks: '#f0a0a0',
+  body: '#4a8a20',
+  limbs: '#3a2a1a',
 };
 
-function ChibiSVG({ colors, size }) {
-  // viewBox is 0 0 120 180; scale to fit size (width-based)
-  const aspect = 180 / 120;
-  const w = size;
-  const h = Math.round(size * aspect);
+const HAIR_PIXELS = [
+  [38,8],[42,6],[46,4],[50,3],[54,3],[58,4],[62,6],[66,8],
+  [36,12],[40,10],[44,8],[48,6],[52,5],[56,5],[60,7],[64,10],
+];
 
+function CustomCharSVG({ colors, size }) {
+  const scale = size / 120;
+  const h = Math.round(190 * scale);
   return (
-    <svg width={w} height={h} viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="rc-hair-depth" cx="40%" cy="30%" r="70%">
-          <stop offset="0%" stopColor="white" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="black" stopOpacity="0.2" />
-        </radialGradient>
-        <radialGradient id="rc-skin-highlight" cx="35%" cy="30%" r="60%">
-          <stop offset="0%" stopColor="white" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="white" stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id="rc-body-highlight" cx="35%" cy="25%" r="65%">
-          <stop offset="0%" stopColor="white" stopOpacity="0.2" />
-          <stop offset="100%" stopColor="white" stopOpacity="0" />
-        </radialGradient>
-        <radialGradient id="rc-shoe-highlight" cx="40%" cy="30%" r="60%">
-          <stop offset="0%" stopColor="white" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="white" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-
-      {/* Hair */}
-      <ellipse cx="60" cy="48" rx="32" ry="36" fill={colors.hair} />
-      <ellipse cx="60" cy="18" rx="12" ry="10" fill={colors.hair} />
-      <ellipse cx="60" cy="48" rx="32" ry="36" fill="url(#rc-hair-depth)" />
-
-      {/* Face */}
-      <ellipse cx="60" cy="52" rx="26" ry="26" fill={colors.skin} />
-      <ellipse cx="52" cy="44" rx="10" ry="8" fill="url(#rc-skin-highlight)" />
-
-      {/* Cheeks */}
-      <ellipse cx="44" cy="58" rx="7" ry="4" fill={colors.cheeks} opacity="0.6" />
-      <ellipse cx="76" cy="58" rx="7" ry="4" fill={colors.cheeks} opacity="0.6" />
-
-      {/* Eyes */}
-      <ellipse cx="51" cy="50" rx="5" ry="6" fill={colors.eyes} />
-      <ellipse cx="69" cy="50" rx="5" ry="6" fill={colors.eyes} />
-      <circle cx="53" cy="47" r="1.5" fill="white" />
-      <circle cx="71" cy="47" r="1.5" fill="white" />
-
-      {/* Mouth */}
-      <path d="M 54 63 Q 60 68 66 63" stroke="#c07050" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-
-      {/* Neck */}
-      <rect x="54" y="74" width="12" height="10" fill={colors.skin} />
-
-      {/* Outfit top */}
-      <rect x="36" y="82" width="48" height="44" rx="8" fill={colors.outfit_top} />
-      <rect x="20" y="84" width="18" height="30" rx="6" fill={colors.outfit_top} />
-      <rect x="82" y="84" width="18" height="30" rx="6" fill={colors.outfit_top} />
-      <ellipse cx="54" cy="92" rx="18" ry="12" fill="url(#rc-body-highlight)" />
-
-      {/* Hands */}
-      <ellipse cx="29" cy="116" rx="9" ry="7" fill={colors.skin} />
-      <ellipse cx="91" cy="116" rx="9" ry="7" fill={colors.skin} />
-
-      {/* Outfit bottom */}
-      <rect x="40" y="120" width="40" height="32" rx="4" fill={colors.outfit_bottom} />
-      <rect x="40" y="140" width="17" height="20" rx="4" fill={colors.outfit_bottom} />
-      <rect x="63" y="140" width="17" height="20" rx="4" fill={colors.outfit_bottom} />
-      <ellipse cx="58" cy="128" rx="14" ry="8" fill="url(#rc-body-highlight)" />
-
-      {/* Shoes */}
-      <ellipse cx="48" cy="164" rx="12" ry="8" fill={colors.shoes} />
-      <ellipse cx="72" cy="164" rx="12" ry="8" fill={colors.shoes} />
-      <ellipse cx="44" cy="160" rx="6" ry="3" fill="url(#rc-shoe-highlight)" />
-      <ellipse cx="68" cy="160" rx="6" ry="3" fill="url(#rc-shoe-highlight)" />
+    <svg width={size} height={h} viewBox="0 0 120 190" xmlns="http://www.w3.org/2000/svg">
+      {HAIR_PIXELS.map(([x, y], i) => (
+        <rect key={i} x={x} y={y} width={6} height={6} fill={colors.hair} rx={1} />
+      ))}
+      {[[34,22],[38,18],[42,16],[46,14],[50,13],[54,13],[58,14],[62,16],[66,18],[70,22]].map(([x,y],i) => (
+        <rect key={'f'+i} x={x} y={y} width={6} height={6} fill={colors.hair} rx={1} />
+      ))}
+      <circle cx="52" cy="42" r="22" fill={colors.skin} />
+      <ellipse cx="44" cy="35" rx="7" ry="5" fill="white" opacity="0.25" />
+      <ellipse cx="36" cy="46" rx="6" ry="3.5" fill={colors.cheeks} opacity="0.55" />
+      <ellipse cx="68" cy="46" rx="6" ry="3.5" fill={colors.cheeks} opacity="0.55" />
+      <circle cx="44" cy="40" r="3.5" fill={colors.eyes} />
+      <circle cx="60" cy="40" r="3.5" fill={colors.eyes} />
+      <circle cx="45.5" cy="38.5" r="1" fill="white" />
+      <circle cx="61.5" cy="38.5" r="1" fill="white" />
+      <path d="M 46 50 Q 52 55 58 50" stroke="#c07050" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      <rect x="47" y="62" width="10" height="8" fill={colors.skin} />
+      <rect x="30" y="69" width="44" height="32" rx="5" fill={colors.body} />
+      <ellipse cx="44" cy="76" rx="10" ry="6" fill="white" opacity="0.15" />
+      <line x1="31" y1="73" x2="14" y2="98" stroke={colors.limbs} strokeWidth="5" strokeLinecap="round" />
+      <line x1="73" y1="73" x2="90" y2="98" stroke={colors.limbs} strokeWidth="5" strokeLinecap="round" />
+      <circle cx="13" cy="101" r="4" fill={colors.skin} />
+      <circle cx="91" cy="101" r="4" fill={colors.skin} />
+      <line x1="43" y1="101" x2="38" y2="138" stroke={colors.limbs} strokeWidth="5" strokeLinecap="round" />
+      <line x1="61" y1="101" x2="66" y2="138" stroke={colors.limbs} strokeWidth="5" strokeLinecap="round" />
+      <ellipse cx="36" cy="141" rx="8" ry="5" fill={colors.limbs} />
+      <ellipse cx="68" cy="141" rx="8" ry="5" fill={colors.limbs} />
     </svg>
   );
 }
@@ -104,7 +66,7 @@ export default function RedHoodCharacter({ size = 135, mood = 'sunny' }) {
 
   if (charColors) {
     const colors = { ...DEFAULT_COLORS, ...charColors };
-    return <ChibiSVG colors={colors} size={size} />;
+    return <CustomCharSVG colors={colors} size={size} />;
   }
 
   // Eyes based on mood
