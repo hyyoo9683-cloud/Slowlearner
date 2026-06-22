@@ -5,27 +5,27 @@ import { loadOnboarding } from './OnboardingScreen';
 // 관심사별 팟캐스트
 const PODCASTS = {
   nature: [
-    { title: 'Ologies with Alie Ward', desc: '자연·과학 각 분야 전문가 인터뷰. 쉽고 유머러스해요.', emoji: '🌿', spotify: 'https://open.spotify.com/show/5nvRkVMH58SelKZYZAllZa', apple: 'https://podcasts.apple.com/podcast/ologies/id1278815517', rssUrl: 'https://feeds.megaphone.fm/ologies' },
-    { title: 'Nature Podcast', desc: '최신 자연과학 연구를 짧고 명확하게 소개해요.', emoji: '🔬', spotify: 'https://open.spotify.com/show/3mLBBmhBfhqbI1lGtb0RwW', apple: 'https://podcasts.apple.com/podcast/nature-podcast/id81934659', rssUrl: 'https://www.nature.com/nature/podcast/rss' },
+    { title: 'Ologies with Alie Ward', desc: '자연·과학 각 분야 전문가 인터뷰. 쉽고 유머러스해요.', emoji: '🌿', spotify: 'https://open.spotify.com/show/5nvRkVMH58SelKZYZAllZa', apple: 'https://podcasts.apple.com/podcast/ologies/id1278815517', rssUrl: 'https://feeds.simplecast.com/5nvRkVMH' },
+    { title: 'Science Vs', desc: '과학으로 논쟁을 파헤치는 팟캐스트. 자연·환경 에피소드가 많아요.', emoji: '🔬', spotify: 'https://open.spotify.com/show/5eXZwvvxt3K2dxha3BSaAe', apple: 'https://podcasts.apple.com/podcast/science-vs/id1191487213', rssUrl: 'https://feeds.megaphone.fm/sciencevs' },
   ],
   animal: [
     { title: 'Radiolab', desc: '동물·생명·과학을 감성적으로 풀어내는 팟캐스트.', emoji: '🐘', spotify: 'https://open.spotify.com/show/2hmkzUtix0qTqvUSMOxMOQ', apple: 'https://podcasts.apple.com/podcast/radiolab/id152249110', rssUrl: 'https://feeds.wnyc.org/radiolab' },
-    { title: 'Stuff You Should Know', desc: '동물·자연·과학 주제도 자주 다뤄요. 두 친구의 유쾌한 대화.', emoji: '🐾', spotify: 'https://open.spotify.com/show/0ofXAdFIQQRsCYj9754UFx', apple: 'https://podcasts.apple.com/podcast/stuff-you-should-know/id278981407', rssUrl: 'https://feeds.simplecast.com/0ofXAdFIQQRsCYj9754UFx' },
+    { title: 'Stuff You Should Know', desc: '동물·자연·과학 주제도 자주 다뤄요. 두 친구의 유쾌한 대화.', emoji: '🐾', spotify: 'https://open.spotify.com/show/0ofXAdFIQQRsCYj9754UFx', apple: 'https://podcasts.apple.com/podcast/stuff-you-should-know/id278981407', rssUrl: 'https://feeds.megaphone.fm/stuffyoushouldknow' },
   ],
   food: [
     { title: 'Gastropod', desc: '음식의 역사·과학·문화를 재미있게 탐구해요.', emoji: '🍳', spotify: 'https://open.spotify.com/show/2hREkBuXEnEH6r9YXYCTZA', apple: 'https://podcasts.apple.com/podcast/gastropod/id956528997', rssUrl: 'https://feeds.simplecast.com/SJov0RBP' },
     { title: 'The Sporkful', desc: '음식 덕후를 위한 진지하고 재미있는 음식 토크.', emoji: '🥄', spotify: 'https://open.spotify.com/show/3GxiMnh9GxLGmYFZ7vVkfx', apple: 'https://podcasts.apple.com/podcast/the-sporkful/id474345214', rssUrl: 'https://feeds.simplecast.com/ILKjF_dU' },
   ],
   travel: [
-    { title: 'Zero To Travel', desc: '여행 팁과 실제 여행자 이야기. 영어 듣기 연습에 딱이에요.', emoji: '✈️', spotify: 'https://open.spotify.com/show/3GxiMnh9GxLGmYFZ7vVkfx', apple: 'https://podcasts.apple.com/podcast/zero-to-travel/id592419010', rssUrl: 'https://feeds.simplecast.com/j7JYRZ2f' },
-    { title: 'Amateur Traveler', desc: '각 나라·도시 여행 정보를 현지인처럼 소개해요.', emoji: '🗺️', spotify: 'https://open.spotify.com/show/4dePeWPRj0vAelFKhBXHRK', apple: 'https://podcasts.apple.com/podcast/amateur-traveler-travel/id73802699', rssUrl: 'https://feeds.feedburner.com/AmateurTraveler' },
+    { title: 'Amateur Traveler', desc: '각 나라·도시 여행 정보를 현지인처럼 소개해요.', emoji: '🗺️', spotify: 'https://open.spotify.com/show/4dePeWPRj0vAelFKhBXHRK', apple: 'https://podcasts.apple.com/podcast/amateur-traveler-travel/id73802699', rssUrl: 'http://feeds.feedburner.com/AmateurTraveler' },
+    { title: 'No Reservations (Spotify)', desc: '앤서니 부르댕 스타일 여행·음식 이야기.', emoji: '✈️', spotify: 'https://open.spotify.com/show/3GxiMnh9GxLGmYFZ7vVkfx', apple: 'https://podcasts.apple.com/podcast/travel-with-rick-steves/id73802699', rssUrl: 'https://feeds.megaphone.fm/stuffyoushouldknow' },
   ],
   daily: [
     { title: 'The Daily (NYT)', desc: '매일 20분, 오늘의 주요 뉴스. 명확한 발음으로 듣기 연습 최고.', emoji: '☀️', spotify: 'https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g', apple: 'https://podcasts.apple.com/podcast/the-daily/id1200361736', rssUrl: 'https://feeds.simplecast.com/54nAGcIl' },
-    { title: 'Stuff You Should Know', desc: '일상 주제를 깊게 파고드는 두 친구의 유쾌한 대화.', emoji: '☕', spotify: 'https://open.spotify.com/show/0ofXAdFIQQRsCYj9754UFx', apple: 'https://podcasts.apple.com/podcast/stuff-you-should-know/id278981407', rssUrl: 'https://feeds.simplecast.com/0ofXAdFIQQRsCYj9754UFx' },
+    { title: 'Stuff You Should Know', desc: '일상 주제를 깊게 파고드는 두 친구의 유쾌한 대화.', emoji: '☕', spotify: 'https://open.spotify.com/show/0ofXAdFIQQRsCYj9754UFx', apple: 'https://podcasts.apple.com/podcast/stuff-you-should-know/id278981407', rssUrl: 'https://feeds.megaphone.fm/stuffyoushouldknow' },
   ],
   culture: [
-    { title: 'The New Yorker Radio Hour', desc: '문화·예술·사회 이슈를 깊이 있게 다뤄요.', emoji: '🎨', spotify: 'https://open.spotify.com/show/1iohmBNlRooIVtukKeavRa', apple: 'https://podcasts.apple.com/podcast/the-new-yorker-radio-hour/id1050430296', rssUrl: 'https://feeds.wnyc.org/newyorkerradiohour' },
+    { title: 'Fresh Air (NPR)', desc: '문화·예술·사회 인물 인터뷰. 명확하고 지적인 영어를 들을 수 있어요.', emoji: '🎨', spotify: 'https://open.spotify.com/show/6O3Nv1r6z1B1y6E6hYdBLm', apple: 'https://podcasts.apple.com/podcast/fresh-air/id73331236', rssUrl: 'https://feeds.npr.org/381444908/podcast.xml' },
     { title: 'Pop Culture Happy Hour (NPR)', desc: '영화·드라마·음악 최신 이슈를 가볍게 즐겨요.', emoji: '🎬', spotify: 'https://open.spotify.com/show/12YKtpJEVFCJFkdqrSOjXD', apple: 'https://podcasts.apple.com/podcast/pop-culture-happy-hour/id427976174', rssUrl: 'https://feeds.npr.org/510282/podcast.xml' },
   ],
 };
@@ -92,6 +92,7 @@ export default function BooksScreen({ onNavigate }) {
   const book = BOOKS_SMALL[interest] || BOOKS_SMALL.daily;
 
   const [article, setArticle] = useState(null);
+  const [articleKo, setArticleKo] = useState('');
   const [articleLoading, setArticleLoading] = useState(true);
   const [speakingArticle, setSpeakingArticle] = useState(false);
   const audioRef = useState(null);
@@ -124,13 +125,41 @@ export default function BooksScreen({ onNavigate }) {
 
   const fetchArticle = async () => {
     setArticleLoading(true);
+    setArticleKo('');
     try {
       const resp = await fetch(`/api/news?interests=${interest}`);
       const data = await resp.json();
       const a = data.articles?.[0];
-      if (a) setArticle({ title: a.title?.replace(/ - .*$/, ''), body: a.description, url: a.url, source: a.source });
+      if (a) {
+        const articleData = { title: a.title?.replace(/ - .*$/, ''), body: a.description, url: a.url, source: a.source };
+        setArticle(articleData);
+        // 한국어 번역 요청
+        translateArticle(articleData);
+      }
     } catch {}
     setArticleLoading(false);
+  };
+
+  const translateArticle = async (a) => {
+    try {
+      const text = `${a.title}\n\n${a.body || ''}`.slice(0, 800);
+      const resp = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `다음 영어 글을 자연스러운 한국어로 번역해주세요. JSON으로 { "ko": "번역문" } 형식으로만 응답해주세요.\n\n${text}` }] }],
+          maxOutputTokens: 512,
+        }),
+      });
+      const result = await resp.json();
+      const raw = result.text || '';
+      try {
+        const parsed = JSON.parse(raw);
+        setArticleKo(parsed.ko || raw);
+      } catch {
+        setArticleKo(raw.replace(/^[^가-힣]*/, '').slice(0, 300));
+      }
+    } catch {}
   };
 
   const speakArticle = async () => {
@@ -180,6 +209,16 @@ export default function BooksScreen({ onNavigate }) {
             <>
               <p className="text-[#1a3d0a] text-sm font-semibold leading-tight">{article.title}</p>
               <p className="text-[#7a7268] text-xs leading-relaxed">{article.body?.slice(0, 200)}{article.body?.length > 200 ? '...' : ''}</p>
+              {articleKo ? (
+                <div className="pt-1 border-t" style={{ borderColor: '#ede9e2' }}>
+                  <p className="text-[#9a9088] text-[10px] font-semibold mb-1">🇰🇷 한국어</p>
+                  <p className="text-[#5a5550] text-xs leading-relaxed">{articleKo}</p>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-[10px] text-[#c0b8b0]">
+                  <span className="animate-pulse">•</span> 번역 중...
+                </div>
+              )}
               <div className="flex items-center gap-2 pt-1">
                 <button onClick={speakArticle}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-semibold transition-all active:scale-95"
