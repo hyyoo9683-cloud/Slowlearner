@@ -5,28 +5,28 @@ import { loadOnboarding } from './OnboardingScreen';
 // 관심사별 팟캐스트
 const PODCASTS = {
   nature: [
-    { title: 'Ologies with Alie Ward', desc: '자연·과학 각 분야 전문가 인터뷰. 쉽고 유머러스해요.', emoji: '🌿', spotify: 'https://open.spotify.com/show/5nvRkVMH58SelKZYZAllZa', apple: 'https://podcasts.apple.com/podcast/ologies/id1278815517' },
-    { title: 'Nature Podcast (by Nature)', desc: '최신 자연과학 연구를 짧고 명확하게 소개해요.', emoji: '🔬', spotify: 'https://open.spotify.com/show/3mLBBmhBfhqbI1lGtb0RwW', apple: 'https://podcasts.apple.com/podcast/nature-podcast/id81934659' },
+    { title: 'Ologies with Alie Ward', desc: '자연·과학 각 분야 전문가 인터뷰. 쉽고 유머러스해요.', emoji: '🌿', spotify: 'https://open.spotify.com/show/5nvRkVMH58SelKZYZAllZa', apple: 'https://podcasts.apple.com/podcast/ologies/id1278815517', rssUrl: 'https://feeds.megaphone.fm/ologies' },
+    { title: 'Nature Podcast', desc: '최신 자연과학 연구를 짧고 명확하게 소개해요.', emoji: '🔬', spotify: 'https://open.spotify.com/show/3mLBBmhBfhqbI1lGtb0RwW', apple: 'https://podcasts.apple.com/podcast/nature-podcast/id81934659', rssUrl: 'https://www.nature.com/nature/podcast/rss' },
   ],
   animal: [
-    { title: 'The Wild with Chris Morgan', desc: '야생동물 전문가와 함께하는 생생한 자연 이야기.', emoji: '🐾', spotify: 'https://open.spotify.com/show/3mLBBmhBfhqbI1lGtb0RwW', apple: 'https://podcasts.apple.com/podcast/the-wild/id1437498560' },
-    { title: 'Radiolab', desc: '동물·생명·과학을 감성적으로 풀어내는 팟캐스트.', emoji: '🐘', spotify: 'https://open.spotify.com/show/2hmkzUtix0qTqvUSMOxMOQ', apple: 'https://podcasts.apple.com/podcast/radiolab/id152249110' },
+    { title: 'Radiolab', desc: '동물·생명·과학을 감성적으로 풀어내는 팟캐스트.', emoji: '🐘', spotify: 'https://open.spotify.com/show/2hmkzUtix0qTqvUSMOxMOQ', apple: 'https://podcasts.apple.com/podcast/radiolab/id152249110', rssUrl: 'https://feeds.wnyc.org/radiolab' },
+    { title: 'Stuff You Should Know', desc: '동물·자연·과학 주제도 자주 다뤄요. 두 친구의 유쾌한 대화.', emoji: '🐾', spotify: 'https://open.spotify.com/show/0ofXAdFIQQRsCYj9754UFx', apple: 'https://podcasts.apple.com/podcast/stuff-you-should-know/id278981407', rssUrl: 'https://feeds.simplecast.com/0ofXAdFIQQRsCYj9754UFx' },
   ],
   food: [
-    { title: 'Gastropod', desc: '음식의 역사·과학·문화를 재미있게 탐구해요.', emoji: '🍳', spotify: 'https://open.spotify.com/show/2hREkBuXEnEH6r9YXYCTZA', apple: 'https://podcasts.apple.com/podcast/gastropod/id956528997' },
-    { title: 'The Sporkful', desc: '음식 덕후를 위한 진지하고 재미있는 음식 토크.', emoji: '🥄', spotify: 'https://open.spotify.com/show/3GxiMnh9GxLGmYFZ7vVkfx', apple: 'https://podcasts.apple.com/podcast/the-sporkful/id474345214' },
+    { title: 'Gastropod', desc: '음식의 역사·과학·문화를 재미있게 탐구해요.', emoji: '🍳', spotify: 'https://open.spotify.com/show/2hREkBuXEnEH6r9YXYCTZA', apple: 'https://podcasts.apple.com/podcast/gastropod/id956528997', rssUrl: 'https://feeds.simplecast.com/SJov0RBP' },
+    { title: 'The Sporkful', desc: '음식 덕후를 위한 진지하고 재미있는 음식 토크.', emoji: '🥄', spotify: 'https://open.spotify.com/show/3GxiMnh9GxLGmYFZ7vVkfx', apple: 'https://podcasts.apple.com/podcast/the-sporkful/id474345214', rssUrl: 'https://feeds.simplecast.com/ILKjF_dU' },
   ],
   travel: [
-    { title: 'Zero To Travel', desc: '여행 팁과 실제 여행자 이야기. 영어 듣기 연습에 딱이에요.', emoji: '✈️', spotify: 'https://open.spotify.com/show/3GxiMnh9GxLGmYFZ7vVkfx', apple: 'https://podcasts.apple.com/podcast/zero-to-travel/id592419010' },
-    { title: 'Amateur Traveler', desc: '각 나라·도시 여행 정보를 현지인처럼 소개해요.', emoji: '🗺️', spotify: 'https://open.spotify.com/show/4dePeWPRj0vAelFKhBXHRK', apple: 'https://podcasts.apple.com/podcast/amateur-traveler-travel/id73802699' },
+    { title: 'Zero To Travel', desc: '여행 팁과 실제 여행자 이야기. 영어 듣기 연습에 딱이에요.', emoji: '✈️', spotify: 'https://open.spotify.com/show/3GxiMnh9GxLGmYFZ7vVkfx', apple: 'https://podcasts.apple.com/podcast/zero-to-travel/id592419010', rssUrl: 'https://feeds.simplecast.com/j7JYRZ2f' },
+    { title: 'Amateur Traveler', desc: '각 나라·도시 여행 정보를 현지인처럼 소개해요.', emoji: '🗺️', spotify: 'https://open.spotify.com/show/4dePeWPRj0vAelFKhBXHRK', apple: 'https://podcasts.apple.com/podcast/amateur-traveler-travel/id73802699', rssUrl: 'https://feeds.feedburner.com/AmateurTraveler' },
   ],
   daily: [
-    { title: 'The Daily (NYT)', desc: '매일 20분, 오늘의 주요 뉴스. 명확한 발음으로 듣기 연습 최고.', emoji: '☀️', spotify: 'https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g', apple: 'https://podcasts.apple.com/podcast/the-daily/id1200361736' },
-    { title: 'Stuff You Should Know', desc: '일상 주제를 깊게 파고드는 두 친구의 유쾌한 대화.', emoji: '☕', spotify: 'https://open.spotify.com/show/0ofXAdFIQQRsCYj9754UFx', apple: 'https://podcasts.apple.com/podcast/stuff-you-should-know/id278981407' },
+    { title: 'The Daily (NYT)', desc: '매일 20분, 오늘의 주요 뉴스. 명확한 발음으로 듣기 연습 최고.', emoji: '☀️', spotify: 'https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g', apple: 'https://podcasts.apple.com/podcast/the-daily/id1200361736', rssUrl: 'https://feeds.simplecast.com/54nAGcIl' },
+    { title: 'Stuff You Should Know', desc: '일상 주제를 깊게 파고드는 두 친구의 유쾌한 대화.', emoji: '☕', spotify: 'https://open.spotify.com/show/0ofXAdFIQQRsCYj9754UFx', apple: 'https://podcasts.apple.com/podcast/stuff-you-should-know/id278981407', rssUrl: 'https://feeds.simplecast.com/0ofXAdFIQQRsCYj9754UFx' },
   ],
   culture: [
-    { title: 'The New Yorker Radio Hour', desc: '문화·예술·사회 이슈를 깊이 있게 다뤄요.', emoji: '🎨', spotify: 'https://open.spotify.com/show/1iohmBNlRooIVtukKeavRa', apple: 'https://podcasts.apple.com/podcast/the-new-yorker-radio-hour/id1050430296' },
-    { title: 'Pop Culture Happy Hour (NPR)', desc: '영화·드라마·음악 최신 이슈를 가볍게 즐겨요.', emoji: '🎬', spotify: 'https://open.spotify.com/show/12YKtpJEVFCJFkdqrSOjXD', apple: 'https://podcasts.apple.com/podcast/pop-culture-happy-hour/id427976174' },
+    { title: 'The New Yorker Radio Hour', desc: '문화·예술·사회 이슈를 깊이 있게 다뤄요.', emoji: '🎨', spotify: 'https://open.spotify.com/show/1iohmBNlRooIVtukKeavRa', apple: 'https://podcasts.apple.com/podcast/the-new-yorker-radio-hour/id1050430296', rssUrl: 'https://feeds.wnyc.org/newyorkerradiohour' },
+    { title: 'Pop Culture Happy Hour (NPR)', desc: '영화·드라마·음악 최신 이슈를 가볍게 즐겨요.', emoji: '🎬', spotify: 'https://open.spotify.com/show/12YKtpJEVFCJFkdqrSOjXD', apple: 'https://podcasts.apple.com/podcast/pop-culture-happy-hour/id427976174', rssUrl: 'https://feeds.npr.org/510282/podcast.xml' },
   ],
 };
 
@@ -95,6 +95,23 @@ export default function BooksScreen({ onNavigate }) {
   const [articleLoading, setArticleLoading] = useState(true);
   const [speakingArticle, setSpeakingArticle] = useState(false);
   const audioRef = useState(null);
+  const [podcastPreviews, setPodcastPreviews] = useState({});
+
+  const fetchPodcastPreview = async (p, idx) => {
+    if (!p.rssUrl) return;
+    setPodcastPreviews(prev => ({ ...prev, [idx]: { loading: true } }));
+    try {
+      const resp = await fetch('/api/podcast', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ rssUrl: p.rssUrl, podcastTitle: p.title }),
+      });
+      const data = await resp.json();
+      setPodcastPreviews(prev => ({ ...prev, [idx]: { loading: false, data } }));
+    } catch (e) {
+      setPodcastPreviews(prev => ({ ...prev, [idx]: { loading: false, error: e.message } }));
+    }
+  };
 
   const interestLabel = {
     nature:'🌿 자연·산책', animal:'🐾 동물', food:'🍳 음식·요리',
@@ -188,23 +205,76 @@ export default function BooksScreen({ onNavigate }) {
       <section>
         <p className="text-white text-sm font-bold mb-2">🎧 팟캐스트 추천</p>
         <div className="space-y-2">
-          {podcasts.map((p, i) => (
-            <div key={i} className="p-3 rounded-2xl flex items-center gap-3" style={{ background: '#faf8f3', border: '1px solid #ede9e2' }}>
-              <span className="text-2xl flex-shrink-0">{p.emoji}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-[#1a3d0a] text-sm font-semibold truncate">{p.title}</p>
-                <p className="text-[#9a9088] text-xs leading-snug mt-0.5">{p.desc}</p>
+          {podcasts.map((p, i) => {
+            const preview = podcastPreviews[i];
+            return (
+              <div key={i} className="rounded-2xl overflow-hidden" style={{ background: '#faf8f3', border: '1px solid #ede9e2' }}>
+                {/* 기본 카드 */}
+                <div className="p-3 flex items-center gap-3">
+                  <span className="text-2xl flex-shrink-0">{p.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[#1a3d0a] text-sm font-semibold truncate">{p.title}</p>
+                    <p className="text-[#9a9088] text-xs leading-snug mt-0.5">{p.desc}</p>
+                  </div>
+                  <button
+                    onClick={() => preview ? setPodcastPreviews(prev => { const n = {...prev}; delete n[i]; return n; }) : fetchPodcastPreview(p, i)}
+                    className="flex-shrink-0 px-2 py-1 rounded-lg text-[10px] font-bold transition-all"
+                    style={{ background: preview ? '#edf5e4' : '#f0ece4', color: preview ? '#4a8a20' : '#7a7268', border: `1px solid ${preview ? '#c8e8a0' : '#e0dbd2'}` }}>
+                    {preview?.loading ? '...' : preview?.data ? '접기 ↑' : '미리보기'}
+                  </button>
+                </div>
+                {/* 미리보기 확장 영역 */}
+                {preview?.data && (
+                  <div className="px-3 pb-3 space-y-2 border-t" style={{ borderColor: '#ede9e2' }}>
+                    {preview.data.episodeTitle && (
+                      <p className="text-[#9a9088] text-[10px] pt-2 leading-snug">최신 에피소드: {preview.data.episodeTitle}</p>
+                    )}
+                    {preview.data.summary && (
+                      <p className="text-[#3a3530] text-xs leading-relaxed">{preview.data.summary}</p>
+                    )}
+                    {preview.data.keyExpressions?.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {preview.data.keyExpressions.map((e, j) => (
+                          <span key={j} className="text-[10px] px-2 py-1 rounded-full"
+                            style={{ background: '#edf5e4', color: '#4a8a20', border: '1px solid #c8e8a0' }}>
+                            {e.english} → {e.korean}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {preview.data.level && (
+                      <span className="inline-block text-[10px] px-2 py-0.5 rounded-full"
+                        style={{ background: '#f8f6f2', color: '#9a9088', border: '1px solid #e0dbd2' }}>
+                        {preview.data.level === 'easy' ? '🟢 쉬움' : preview.data.level === 'hard' ? '🔴 어려움' : '🟡 중간'}
+                      </span>
+                    )}
+                    <div className="flex gap-2 pt-1">
+                      <a href={p.spotify} target="_blank" rel="noopener noreferrer"
+                        className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
+                        style={{ background: '#1DB954', color: 'white' }}>▶ Spotify로 듣기</a>
+                      <a href={p.apple} target="_blank" rel="noopener noreferrer"
+                        className="flex-1 py-2 rounded-xl text-xs font-bold text-center"
+                        style={{ background: '#fc3c44', color: 'white' }}>▶ Apple로 듣기</a>
+                    </div>
+                  </div>
+                )}
+                {preview?.error && (
+                  <p className="px-3 pb-3 text-[#e05050] text-[10px]">불러오기 실패. 잠시 후 다시 시도해요.</p>
+                )}
+                {/* 미리보기 없을 때 기본 링크 버튼 */}
+                {!preview && (
+                  <div className="px-3 pb-3 flex gap-2">
+                    <a href={p.spotify} target="_blank" rel="noopener noreferrer"
+                      className="flex-1 py-1.5 rounded-xl text-[10px] font-bold text-center"
+                      style={{ background: '#1DB954', color: 'white' }}>Spotify</a>
+                    <a href={p.apple} target="_blank" rel="noopener noreferrer"
+                      className="flex-1 py-1.5 rounded-xl text-[10px] font-bold text-center"
+                      style={{ background: '#fc3c44', color: 'white' }}>Apple</a>
+                  </div>
+                )}
               </div>
-              <div className="flex flex-col gap-1 flex-shrink-0">
-                <a href={p.spotify} target="_blank" rel="noopener noreferrer"
-                  className="px-2 py-1 rounded-lg text-[10px] font-bold text-center"
-                  style={{ background: '#1DB954', color: 'white' }}>Spotify</a>
-                <a href={p.apple} target="_blank" rel="noopener noreferrer"
-                  className="px-2 py-1 rounded-lg text-[10px] font-bold text-center"
-                  style={{ background: '#fc3c44', color: 'white' }}>Apple</a>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
