@@ -41,7 +41,7 @@ export default function SettingsScreen() {
 
   return (
     <div className="tab-content px-4 pt-4 pb-24 space-y-5">
-      <h2 className="text-[#3a3530] font-bold text-lg">설정</h2>
+      <h2 className="text-white font-bold text-lg">설정</h2>
 
       {/* Font Size */}
       <div className="p-4 rounded-2xl space-y-3"

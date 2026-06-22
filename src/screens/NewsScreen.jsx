@@ -364,7 +364,7 @@ export default function NewsScreen({ onNavigate }) {
   return (
     <div className="tab-content px-4 pt-4 pb-24 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-[#3a3530] font-bold text-lg">오늘의 뉴스</h2>
+        <h2 className="text-white font-bold text-lg">오늘의 뉴스</h2>
         <div className="flex items-center gap-2">
           {isLive && (
             <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"

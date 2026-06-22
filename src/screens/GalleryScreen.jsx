@@ -139,7 +139,7 @@ export default function GalleryScreen({ onNavigate }) {
     <div className="tab-content px-4 pt-4 pb-24">
       {/* Header + Mode Toggle */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[#3a3530] font-bold text-lg">나의 기록들</h2>
+        <h2 className="text-white font-bold text-lg">나의 기록들</h2>
         <div className="flex rounded-2xl overflow-hidden"
           style={{ background: '#f0ece4', border: '1px solid #e0dbd2' }}>
           {[

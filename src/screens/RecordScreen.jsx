@@ -614,7 +614,7 @@ export default function RecordScreen({ prefillText, onClearPrefill, onNavigate }
   return (
     <div className="tab-content px-4 pt-4 pb-24 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-[#3a3530] font-bold text-lg">오늘의 기록</h2>
+        <h2 className="text-white font-bold text-lg">오늘의 기록</h2>
         {draftSaved && (
           <span className="text-[#6aaa3a] text-xs fade-in">✓ 임시저장됨</span>
         )}
