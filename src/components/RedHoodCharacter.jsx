@@ -1,72 +1,58 @@
 import { useState, useEffect } from 'react';
 
-const DEFAULT_COLORS = {
-  hair: '#4a2c0a',
-  skin: '#f8d5b0',
-  eyes: '#2a1a0a',
-  cheeks: '#f0a0a0',
-  body: '#4a8a20',
-  limbs: '#3a2a1a',
-};
+const COLS = 12;
+const FACE_ROWS = 8;
+const BODY_ROWS = 8;
+const TOTAL_ROWS = FACE_ROWS + BODY_ROWS;
 
-const HAIR_PIXELS = [
-  [38,8],[42,6],[46,4],[50,3],[54,3],[58,4],[62,6],[66,8],
-  [36,12],[40,10],[44,8],[48,6],[52,5],[56,5],[60,7],[64,10],
-];
+const MASK = (() => {
+  const grid = Array.from({ length: TOTAL_ROWS }, () => Array(COLS).fill(0));
+  for (let r = 0; r < FACE_ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cx = (COLS - 1) / 2, cy = (FACE_ROWS - 1) / 2;
+      const dx = (c - cx) / 4, dy = (r - cy) / 4;
+      if (dx * dx + dy * dy <= 1) grid[r][c] = 1;
+    }
+  }
+  for (let r = FACE_ROWS; r < TOTAL_ROWS; r++) {
+    for (let c = 2; c < COLS - 2; c++) grid[r][c] = 2;
+  }
+  return grid;
+})();
 
-function CustomCharSVG({ colors, size }) {
-  const scale = size / 120;
-  const h = Math.round(190 * scale);
+function PixelCharSVG({ pixels, size }) {
+  const cellSize = size / COLS;
+  const h = cellSize * TOTAL_ROWS;
   return (
-    <svg width={size} height={h} viewBox="0 0 120 190" xmlns="http://www.w3.org/2000/svg">
-      {HAIR_PIXELS.map(([x, y], i) => (
-        <rect key={i} x={x} y={y} width={6} height={6} fill={colors.hair} rx={1} />
-      ))}
-      {[[34,22],[38,18],[42,16],[46,14],[50,13],[54,13],[58,14],[62,16],[66,18],[70,22]].map(([x,y],i) => (
-        <rect key={'f'+i} x={x} y={y} width={6} height={6} fill={colors.hair} rx={1} />
-      ))}
-      <circle cx="52" cy="42" r="22" fill={colors.skin} />
-      <ellipse cx="44" cy="35" rx="7" ry="5" fill="white" opacity="0.25" />
-      <ellipse cx="36" cy="46" rx="6" ry="3.5" fill={colors.cheeks} opacity="0.55" />
-      <ellipse cx="68" cy="46" rx="6" ry="3.5" fill={colors.cheeks} opacity="0.55" />
-      <circle cx="44" cy="40" r="3.5" fill={colors.eyes} />
-      <circle cx="60" cy="40" r="3.5" fill={colors.eyes} />
-      <circle cx="45.5" cy="38.5" r="1" fill="white" />
-      <circle cx="61.5" cy="38.5" r="1" fill="white" />
-      <path d="M 46 50 Q 52 55 58 50" stroke="#c07050" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-      <rect x="47" y="62" width="10" height="8" fill={colors.skin} />
-      <rect x="30" y="69" width="44" height="32" rx="5" fill={colors.body} />
-      <ellipse cx="44" cy="76" rx="10" ry="6" fill="white" opacity="0.15" />
-      <line x1="31" y1="73" x2="14" y2="98" stroke={colors.limbs} strokeWidth="5" strokeLinecap="round" />
-      <line x1="73" y1="73" x2="90" y2="98" stroke={colors.limbs} strokeWidth="5" strokeLinecap="round" />
-      <circle cx="13" cy="101" r="4" fill={colors.skin} />
-      <circle cx="91" cy="101" r="4" fill={colors.skin} />
-      <line x1="43" y1="101" x2="38" y2="138" stroke={colors.limbs} strokeWidth="5" strokeLinecap="round" />
-      <line x1="61" y1="101" x2="66" y2="138" stroke={colors.limbs} strokeWidth="5" strokeLinecap="round" />
-      <ellipse cx="36" cy="141" rx="8" ry="5" fill={colors.limbs} />
-      <ellipse cx="68" cy="141" rx="8" ry="5" fill={colors.limbs} />
+    <svg width={size} height={h} viewBox={`0 0 ${size} ${h}`} xmlns="http://www.w3.org/2000/svg">
+      {pixels.map((row, r) =>
+        row.map((px, c) => {
+          if (MASK[r][c] === 0 || !px) return null;
+          return (
+            <rect key={`${r}-${c}`}
+              x={c * cellSize} y={r * cellSize}
+              width={cellSize - 0.5} height={cellSize - 0.5}
+              fill={px} rx={0.5}
+            />
+          );
+        })
+      )}
     </svg>
   );
 }
 
 export default function RedHoodCharacter({ size = 135, mood = 'sunny' }) {
-  const [charColors, setCharColors] = useState(null);
+  const [savedPixels, setSavedPixels] = useState(null);
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('slowrunner_char_colors');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && typeof parsed === 'object') {
-          setCharColors(parsed);
-        }
-      }
+      const stored = localStorage.getItem('slowrunner_pixel_v2');
+      if (stored) setSavedPixels(JSON.parse(stored));
     } catch {}
   }, []);
 
-  if (charColors) {
-    const colors = { ...DEFAULT_COLORS, ...charColors };
-    return <CustomCharSVG colors={colors} size={size} />;
+  if (savedPixels) {
+    return <PixelCharSVG pixels={savedPixels} size={size} />;
   }
 
   // Eyes based on mood
